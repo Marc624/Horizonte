@@ -1,0 +1,52 @@
+/* Ejecutar: node tests.js. En navegador: abrir tests.html. Sin dependencias. */
+(function(root){
+'use strict';
+function run(F){
+ const results=[];
+ const near=(a,b,tolerance=1e-7)=>{if(!Number.isFinite(a)||Math.abs(a-b)>tolerance*Math.max(1,Math.abs(b)))throw Error(`Esperado ${b}; recibido ${a}`);};
+ const equal=(a,b)=>{if(a!==b)throw Error(`Esperado ${b}; recibido ${a}`);};
+ const throws=fn=>{let did=false;try{fn();}catch(e){did=true;}if(!did)throw Error('Debía rechazar el dato');};
+ const test=(name,fn)=>{try{fn();results.push({name,passed:true});}catch(e){results.push({name,passed:false,error:e.message});}};
+ const base={initial:0,contribution:1000,spending:1000,withdrawal:.04,nominal:0,inflation:0,age:30,retirementAge:67};
+ test('Tasa real exacta de Fisher',()=>near(F.realRate(.05,.02),1.05/1.02-1));
+ test('Tasa real cero si nominal igual a inflación',()=>near(F.realRate(.02,.02),0));
+ test('Rechazo inflación -100%',()=>throws(()=>F.realRate(.05,-1)));
+ test('Interés cero con aportaciones',()=>near(F.futureValue(1000,100,0,12),2200));
+ test('Doce meses reproducen tasa anual efectiva',()=>near(F.futureValue(1000,0,.05,12),1050));
+ test('Mes cero mantiene capital',()=>near(F.futureValue(1000,200,.05,0),1000));
+ test('Rentabilidad negativa permitida',()=>near(F.futureValue(1000,0,-.1,12),900));
+ test('Rechazo aportación negativa',()=>throws(()=>F.futureValue(0,-10,.05,12)));
+ test('Rechazo NaN',()=>throws(()=>F.futureValue(NaN,10,.05,12)));
+ test('Rechazo tasa -100%',()=>throws(()=>F.futureValue(100,10,-1,12)));
+ test('Rechazo meses fraccionarios',()=>throws(()=>F.futureValue(100,10,.05,1.5)));
+ test('Objetivo de 1500/mes al 4% = 450000',()=>near(F.fire({...base,spending:1500}).target,450000));
+ test('FIRE al mes exacto con retorno cero',()=>equal(F.fire(base).reached,300));
+ test('Edad FIRE igual a edad más plazo',()=>near(F.fire(base).age,55));
+ test('Objetivo inicialmente alcanzado',()=>equal(F.fire({...base,initial:300000}).reached,0));
+ test('Objetivo no alcanzable sin retorno ni aportación',()=>equal(F.fire({...base,contribution:0}).reached,null));
+ test('No alcanzado no se confunde con cero meses',()=>equal(F.fire({...base,contribution:0}).age,null));
+ test('Rechazo gasto objetivo cero',()=>throws(()=>F.fire({...base,spending:0})));
+ test('Rechazo retirada cero',()=>throws(()=>F.fire({...base,withdrawal:0})));
+ test('Rechazo edad jubilación menor',()=>throws(()=>F.fire({...base,retirementAge:20})));
+ test('Capital a jubilación con tasa real cero',()=>near(F.fire(base).atRetirement,444000));
+ test('Recurrencia mensual coincide con fórmula cerrada',()=>{const f=F.fire({...base,initial:30000,contribution:500,nominal:.05,inflation:.02});near(f.series[20].balance,F.futureValue(30000,500,F.realRate(.05,.02),240));});
+ test('Serie anual incluye año cero y año 80',()=>equal(F.fire(base).series.length,81));
+ test('Compuesto separa aportado y rendimiento',()=>{const c=F.compound({initial:1000,contribution:100,nominal:0,inflation:0,years:1,purchase:100});near(c.series[1].paid,2200);near(c.series[1].earnings,0);near(c.series[1].balance,2200);});
+ test('Oportunidad: 1000 al 5% en 20 años',()=>{const c=F.compound({initial:0,contribution:0,nominal:.05,inflation:.02,years:20,purchase:1000});near(c.opportunity,2653.297705144422);near(c.forgoneEarnings,1653.297705144422);near(c.opportunityReal,1000*Math.pow(1.05/1.02,20));});
+ test('Oportunidad no se agrega al capital de simulación',()=>{const c=F.compound({initial:0,contribution:0,nominal:.05,inflation:.02,years:20,purchase:1000});near(c.series[20].balance,0);});
+ test('Rendimientos negativos visibles',()=>{const c=F.compound({initial:1000,contribution:0,nominal:-.1,inflation:0,years:1,purchase:1000});near(c.series[1].earnings,-100);near(c.forgoneEarnings,-100);});
+ test('Ratios sin denominador devuelven null',()=>{const d=F.dashboard([],[],'2026-01');equal(d.debtRatio,null);equal(d.savingRate,null);});
+ test('Patrimonio y endeudamiento usan pasivos/activos',()=>{const d=F.dashboard([{kind:'liquid',balance:5000},{kind:'investment',balance:30000},{kind:'other',balance:100000},{kind:'liability',balance:20000}],[],'2026-01');near(d.netWorth,115000);near(d.debtRatio,20000/135000);near(d.investment,30000);});
+ test('Transferencias excluidas y meses separados',()=>{const d=F.dashboard([],[{date:'2026-01-01',kind:'income',amount:2500},{date:'2026-01-02',kind:'expense',amount:1500},{date:'2026-01-03',kind:'transfer',amount:500},{date:'2026-02-01',kind:'income',amount:10000}],'2026-01');near(d.savings,1000);near(d.savingRate,.4);});
+ test('Déficit y ahorro negativo',()=>{const d=F.dashboard([],[{date:'2026-01-01',kind:'income',amount:100},{date:'2026-01-02',kind:'expense',amount:200}],'2026-01');near(d.savings,-100);near(d.savingRate,-1);});
+ test('Sesgo mínimo con ítems inversos',()=>F.biases([1,1,5,1,1,5,1,1,5]).forEach(b=>{near(b.score,0);equal(b.level,'Baja');}));
+ test('Sesgo máximo con ítems inversos',()=>F.biases([5,5,1,5,5,1,5,5,1]).forEach(b=>{near(b.score,100);equal(b.level,'Alta');}));
+ test('Respuestas neutras no equivalen a ausencia de sesgo',()=>F.biases(Array(9).fill(3)).forEach(b=>{near(b.score,50);equal(b.level,'Moderada');}));
+ test('Test incompleto rechazado',()=>throws(()=>F.biases([1,2,3])));
+ test('Respuesta fuera de escala rechazada',()=>throws(()=>F.biases(Array(9).fill(0))));
+ test('Respuesta fraccionaria rechazada',()=>throws(()=>F.biases(Array(9).fill(2.5))));
+ return results;
+}
+if(typeof module!=='undefined' && module.exports){module.exports=run;if(typeof require==='function' && require.main===module){const results=run(require('./finance.js'));results.forEach(r=>console.log(`${r.passed?'OK':'ERROR'} | ${r.name}${r.error?' | '+r.error:''}`));console.log(`${results.filter(r=>r.passed).length}/${results.length} correctas`);if(results.some(r=>!r.passed))process.exitCode=1;}}
+else root.runFinanceTests=run;
+})(typeof globalThis!=='undefined'?globalThis:this);
