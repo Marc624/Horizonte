@@ -1,9 +1,9 @@
 (() => {
 'use strict';
 const $ = id => document.getElementById(id);
-const money = n => n === null ? 'No definido' : new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:2}).format(n);
-const pct = n => n === null ? 'No definido' : new Intl.NumberFormat('es-ES',{style:'percent',maximumFractionDigits:2}).format(n);
-const decimal = n => new Intl.NumberFormat('es-ES',{maximumFractionDigits:1}).format(n);
+const money = n => n === null ? 'No definido' : new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:2,useGrouping:'always'}).format(n);
+const pct = n => n === null ? 'No definido' : new Intl.NumberFormat('es-ES',{style:'percent',maximumFractionDigits:2,useGrouping:'always'}).format(n);
+const decimal = n => new Intl.NumberFormat('es-ES',{maximumFractionDigits:1,useGrouping:'always'}).format(n);
 const escape = x => String(x).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const localDate = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 const KEY='horizonte-v1', labels={liquid:'Líquido',investment:'Inversión',other:'Otro activo',liability:'Pasivo',income:'Ingreso',expense:'Gasto',transfer:'Transferencia'};
