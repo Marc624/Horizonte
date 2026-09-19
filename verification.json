@@ -1,0 +1,244 @@
+{
+  "passed": 46,
+  "total": 46,
+  "tests": [
+    {
+      "name": "Tasa real exacta de Fisher",
+      "passed": true
+    },
+    {
+      "name": "Tasa real cero si nominal igual a inflación",
+      "passed": true
+    },
+    {
+      "name": "Rechazo inflación -100%",
+      "passed": true
+    },
+    {
+      "name": "Interés cero con aportaciones",
+      "passed": true
+    },
+    {
+      "name": "Doce meses reproducen tasa anual efectiva",
+      "passed": true
+    },
+    {
+      "name": "Mes cero mantiene capital",
+      "passed": true
+    },
+    {
+      "name": "Rentabilidad negativa permitida",
+      "passed": true
+    },
+    {
+      "name": "Rechazo aportación negativa",
+      "passed": true
+    },
+    {
+      "name": "Rechazo NaN",
+      "passed": true
+    },
+    {
+      "name": "Rechazo tasa -100%",
+      "passed": true
+    },
+    {
+      "name": "Rechazo meses fraccionarios",
+      "passed": true
+    },
+    {
+      "name": "Objetivo de 1500/mes al 4% = 450000",
+      "passed": true
+    },
+    {
+      "name": "FIRE al mes exacto con retorno cero",
+      "passed": true
+    },
+    {
+      "name": "Edad FIRE igual a edad más plazo",
+      "passed": true
+    },
+    {
+      "name": "Objetivo inicialmente alcanzado",
+      "passed": true
+    },
+    {
+      "name": "Objetivo no alcanzable sin retorno ni aportación",
+      "passed": true
+    },
+    {
+      "name": "No alcanzado no se confunde con cero meses",
+      "passed": true
+    },
+    {
+      "name": "Rechazo gasto objetivo cero",
+      "passed": true
+    },
+    {
+      "name": "Rechazo retirada cero",
+      "passed": true
+    },
+    {
+      "name": "Rechazo edad jubilación menor",
+      "passed": true
+    },
+    {
+      "name": "Capital a jubilación con tasa real cero",
+      "passed": true
+    },
+    {
+      "name": "Recurrencia mensual coincide con fórmula cerrada",
+      "passed": true
+    },
+    {
+      "name": "Serie anual incluye año cero y año 80",
+      "passed": true
+    },
+    {
+      "name": "Compuesto separa aportado y rendimiento",
+      "passed": true
+    },
+    {
+      "name": "Oportunidad: 1000 al 5% en 20 años",
+      "passed": true
+    },
+    {
+      "name": "Oportunidad no se agrega al capital de simulación",
+      "passed": true
+    },
+    {
+      "name": "Rendimientos negativos visibles",
+      "passed": true
+    },
+    {
+      "name": "Ratios sin denominador devuelven null",
+      "passed": true
+    },
+    {
+      "name": "Patrimonio y endeudamiento usan pasivos/activos",
+      "passed": true
+    },
+    {
+      "name": "Transferencias excluidas y meses separados",
+      "passed": true
+    },
+    {
+      "name": "Déficit y ahorro negativo",
+      "passed": true
+    },
+    {
+      "name": "Sesgo mínimo con ítems inversos",
+      "passed": true
+    },
+    {
+      "name": "Sesgo máximo con ítems inversos",
+      "passed": true
+    },
+    {
+      "name": "Respuestas neutras no equivalen a ausencia de sesgo",
+      "passed": true
+    },
+    {
+      "name": "Test incompleto rechazado",
+      "passed": true
+    },
+    {
+      "name": "Respuesta fuera de escala rechazada",
+      "passed": true
+    },
+    {
+      "name": "Respuesta fraccionaria rechazada",
+      "passed": true
+    },
+    {
+      "name": "Presupuesto calcula desviaciones y gasto no planificado",
+      "passed": true
+    },
+    {
+      "name": "Presupuesto rechaza categorías repetidas",
+      "passed": true
+    },
+    {
+      "name": "Jubilación integra pensión y capital requerido",
+      "passed": true
+    },
+    {
+      "name": "Jubilación convierte rentabilidad nominal de desacumulación a real",
+      "passed": true
+    },
+    {
+      "name": "Préstamo francés a interés cero amortiza principal",
+      "passed": true
+    },
+    {
+      "name": "Préstamo incorpora comisiones en TAE",
+      "passed": true
+    },
+    {
+      "name": "TAE del préstamo es finita con valores normales",
+      "passed": true
+    },
+    {
+      "name": "Ratios bancarios generan warning configurable y apalancamiento",
+      "passed": true
+    },
+    {
+      "name": "Score empresarial devuelve razones y ratios",
+      "passed": true
+    }
+  ],
+  "examples": {
+    "dashboard": {
+      "assets": 135000,
+      "liabilities": 20000,
+      "liquid": 5000,
+      "investment": 30000,
+      "netWorth": 115000,
+      "debtRatio": 0.14814814814814814,
+      "income": 0,
+      "expenses": 0,
+      "savings": 0,
+      "savingRate": null
+    },
+    "fire": [
+      {
+        "nominal": 0.03,
+        "target": 450000,
+        "realRate": 0.009803921568627416,
+        "months": 618,
+        "age": 81.5,
+        "atRetirement": 310291.72181540006
+      },
+      {
+        "nominal": 0.05,
+        "target": 450000,
+        "realRate": 0.02941176470588247,
+        "months": 423,
+        "age": 65.25,
+        "atRetirement": 485193.0134648045
+      },
+      {
+        "nominal": 0.07,
+        "target": 450000,
+        "realRate": 0.0490196078431373,
+        "months": 329,
+        "age": 57.41666666666667,
+        "atRetirement": 786210.0889139052
+      }
+    ],
+    "compound": {
+      "series": [
+        {
+          "year": 20,
+          "balance": 107693.87411500484,
+          "paid": 58000,
+          "earnings": 49693.874115004844,
+          "real": 72474.89003074613
+        }
+      ],
+      "opportunity": 2653.2977051444204,
+      "opportunityReal": 1785.59329376359,
+      "forgoneEarnings": 1653.2977051444204
+    }
+  }
+}
