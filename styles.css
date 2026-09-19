@@ -52,10 +52,8 @@ header .shell { position: relative; z-index: 1; padding-top: 42px; padding-botto
 .brand-o { position: relative; display: inline-block; width: .82em; height: .78em; margin: 0 .04em; transform: translateY(.1em); }
 .brand-o::before { position: absolute; right: .08em; bottom: .2em; left: .08em; height: .52em; border-radius: .52em .52em 0 0; background: #fbbf24; content: ""; }
 .brand-o::after { position: absolute; right: 0; bottom: .13em; left: 0; border-top: .1em solid #5eead4; content: ""; }
-.brand-sun { fill: none; stroke: #fbbf24; stroke-linecap: round; stroke-width: 4; }
-.brand-horizon { fill: none; stroke: #5eead4; stroke-linecap: round; stroke-width: 2.5; }
-.brand-growth { fill: none; stroke: #99f6e4; stroke-linecap: round; stroke-linejoin: round; stroke-width: 3.5; }
-.brand-arrow { fill: none; stroke: #99f6e4; stroke-linecap: round; stroke-linejoin: round; stroke-width: 3.5; }
+.town-hill { fill: rgb(8 127 120 / 24%); }
+.town-horizon { fill: none; stroke: #99f6e4; stroke-linecap: round; stroke-width: 2.5; }
 
 h1, h2, h3, p { margin-top: 0; }
 h1 { margin-bottom: 8px; font-size: clamp(2rem, 4vw, 3.1rem); letter-spacing: -.045em; line-height: 1; }
@@ -73,6 +71,7 @@ header p:last-child { max-width: 38rem; margin-bottom: 0; color: #c6d0e1; }
   gap: 14px;
   flex-wrap: wrap;
 }
+.user-greeting { color: var(--teal-dark); font-weight: 750; }
 .toolbar { margin: 24px 0 18px; color: var(--ink-soft); font-size: .82rem; }
 .toolbar #storage-status { margin-right: auto; }
 .badge {
@@ -105,19 +104,42 @@ header p:last-child { max-width: 38rem; margin-bottom: 0; color: #c6d0e1; }
   color: var(--amber-ink);
   background: var(--amber-pale);
 }
+.welcome-panel { position: fixed; inset: 0; z-index: 100; display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, .8fr); gap: clamp(32px, 8vw, 128px); align-items: center; width: 100%; min-height: 100vh; margin: 0; padding: clamp(28px, 8vw, 100px); overflow: auto; border: 0; border-radius: 0; color: #fff; background: linear-gradient(135deg, rgb(16 26 49 / 94%), rgb(21 38 75 / 70%)), url("assets/alcala-fondo.jpeg") center / cover no-repeat; box-shadow: 0 18px 45px rgb(15 23 42 / 28%); }
+.welcome-panel::before, .welcome-panel::after { display: none; }
+.welcome-panel[hidden] { display: none; }
+.welcome-copy, .welcome-map { position: relative; z-index: 1; }
+.welcome-brand { display: flex; align-items: center; gap: 12px; margin-bottom: clamp(42px, 8vh, 84px); }
+.welcome-brand .brand-mark { width: 64px; height: 46px; flex-basis: 64px; }
+.welcome-brand-name { display: flex; align-items: center; gap: .02em; color: #fff; font-size: clamp(1.35rem, 2.4vw, 1.8rem); letter-spacing: -.04em; }
+.welcome-brand-name .brand-o { transform: translateY(.1em); }
+.welcome-copy .eyebrow { color: #75e1d6; }
+.welcome-copy h2 { max-width: 620px; margin-bottom: 12px; font-size: clamp(1.8rem, 4vw, 3rem); }
+.welcome-copy > p:not(.eyebrow) { max-width: 640px; color: #c6d0e1; font-size: 1.05rem; }
+.welcome-fields { display: grid; grid-template-columns: 1fr; gap: 0; max-width: 520px; }
+.welcome-name { max-width: 520px; margin-top: 24px; color: #e7edf7; font-size: .9rem; }
+.welcome-currency { margin-top: 16px; color: #e7edf7; font-size: .9rem; }
+.welcome-name input { margin-top: 8px; font-size: 1.05rem; }
+.welcome-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 24px 0 16px; }
+.welcome-actions .secondary { border-color: rgb(255 255 255 / 20%); color: #e7edf7; background: rgb(255 255 255 / 8%); }
+.welcome-actions .secondary:hover { border-color: rgb(255 255 255 / 35%); color: #fff; background: rgb(255 255 255 / 15%); }
+.welcome-check { flex-direction: row; align-items: center; gap: 8px; color: #b8c6db; font-size: .8rem; font-weight: 500; }
+.welcome-check input { width: 17px; height: 17px; }
+.welcome-map { display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 28px; border: 1px solid rgb(255 255 255 / 13%); border-radius: 18px; color: #dffcf8; background: linear-gradient(145deg, rgb(16 35 69 / 90%), rgb(8 127 120 / 22%)); box-shadow: 0 20px 45px rgb(0 0 0 / 20%); backdrop-filter: blur(8px); }
+.welcome-map div { display: flex; align-items: center; gap: 12px; }
+.welcome-map strong { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; color: #102345; background: #5eead4; }
+.welcome-map span { font-weight: 700; }
+.welcome-map p { margin: 12px 0 0; color: #b8c6db; font-size: .78rem; }
 
 .tabs {
-  display: flex;
-  gap: 7px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
   margin: 26px 0 22px;
-  padding: 5px;
+  padding: 9px;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: #eaf0f6;
-  overflow-x: auto;
-  scrollbar-width: thin;
 }
-.tabs button { flex: 0 0 auto; white-space: nowrap; }
 
 button {
   min-height: 42px;
@@ -132,7 +154,7 @@ button {
 }
 button:hover { background: var(--teal-dark); box-shadow: 0 4px 10px rgb(6 100 95 / 18%); }
 button:active { transform: translateY(1px); }
-.tabs button { min-height: 38px; padding: 8px 12px; color: #526078; background: transparent; font-size: .82rem; }
+.tabs button { min-height: 48px; padding: 10px 12px; color: #526078; background: #fff; font-size: .82rem; text-align: left; white-space: normal; }
 .tabs button:hover { color: var(--ink); background: #fff; box-shadow: none; }
 .tabs button[aria-current="page"] { color: #fff; background: var(--navy); box-shadow: 0 3px 8px rgb(16 26 49 / 18%); }
 .secondary { border-color: var(--line); color: #26344e; background: #fff; }
@@ -227,9 +249,13 @@ footer a { color: var(--teal-dark); text-decoration: underline; text-underline-o
   header .shell { padding-top: 32px; padding-bottom: 30px; }
   .brand-lockup { align-items: flex-start; gap: 12px; }
   .brand-mark { width: 76px; height: 54px; flex-basis: 76px; }
+  .welcome-panel { grid-template-columns: 1fr; padding: 28px 16px; }
+  .welcome-fields { grid-template-columns: 1fr; }
+  .welcome-landmark { right: -30vw; bottom: 4vh; width: 145vw; opacity: .72; }
   .toolbar { align-items: stretch; }
   .toolbar #storage-status { flex-basis: 100%; order: 3; }
   .toolbar button { flex: 1 1 auto; }
+  .tabs { grid-template-columns: 1fr; }
   .heading { align-items: flex-start; }
   .heading label { width: 100%; }
   .form-grid, .form-grid.wide { grid-template-columns: 1fr; }

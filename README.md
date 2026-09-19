@@ -8,6 +8,8 @@ Web estática funcional en HTML5, Tailwind CSS y JavaScript, con Chart.js. No re
 
 No hay ejecución de inversiones, conexión bancaria, usuarios compartidos, autenticación, sincronización, importación de copias JSON ni almacenamiento cifrado. La exportación es una copia de los datos para consulta o procesamiento externo, no un flujo de restauración incorporado. Las decisiones del laboratorio no son órdenes. Los escenarios son deterministas e ilustrativos, no pronósticos ni probabilidades.
 
+En la pantalla de bienvenida se puede elegir una de 15 monedas habituales. La preferencia se guarda junto al nombre en `horizonte-profile` y se usa solo para formatear importes; los cálculos no cambian de escala ni realizan conversiones entre divisas. Los perfiles anteriores sin moneda conservan EUR por compatibilidad. El botón «Cambiar nombre o moneda» permite volver a editar esta preferencia después de cerrar la introducción sin borrar los datos financieros.
+
 La documentación de GitHub confirma que Pages publica archivos estáticos HTML, CSS y JavaScript. [GitHub Docs](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages)
 
 ## 2. Archivos
@@ -218,6 +220,32 @@ Para evolucionar a un producto real: evaluación de privacidad y protección de 
 Se ejecutaron **46 pruebas del núcleo y módulos ampliados**, todas correctas. verification.json contiene los resultados. Se comprueban Fisher exacto, tasas cero y negativas, equivalencia mensual/anual, primer cruce FIRE, objetivo ya alcanzado, objetivo no alcanzado, retirada cero rechazada, fechas de jubilación incoherentes, independencia de coste de oportunidad, exclusión de transferencias, filtros mensuales, ratios indefinidos, puntuaciones invertidas, presupuestos, jubilación con pensión y conversión nominal-real, préstamo francés y TAE finita, ratios bancarios y scoring explicable.
 
 Además de la suite de dominio, se hizo una comprobación funcional en navegador: navegación por los nueve apartados, envío de los formularios de cálculo, juego de decisiones, persistencia tras recargar y ausencia de `NaN`/`Infinity`. Esta comprobación no certifica todos los navegadores ni sustituye pruebas de extremo a extremo.
+
+### Checklist manual antes de clase
+
+1. Cargar ejemplo y comprobar 135.000 EUR de activos, 20.000 EUR de pasivos, 115.000 EUR netos y ratio 14,81%.
+2. Comprobar ingresos 2.500 EUR, gastos 1.500 EUR y ahorro 1.000 EUR; la transferencia de 500 EUR no altera esos valores.
+3. Añadir, editar y eliminar un saldo y un movimiento. Recargar y verificar persistencia. Filtrar otro mes: saldos iguales, flujos distintos.
+4. Mantener los supuestos FIRE de inicio: 30 años, 30.000 EUR iniciales, 500 EUR/mes reales, gasto 1.500 EUR, retirada 4%, inflación 2%, rentabilidades 3/5/7%. Verificar los resultados de la tabla de demostración.
+5. Pulsar Traer inversión y flujo: la aportación pasa a 1.000 EUR, pero los resultados no cambian hasta recalcular. No confundir este caso con la referencia de 500 EUR.
+6. Probar cero retorno, rentabilidad negativa y cero aportación. No debe aparecer NaN ni infinito en casos admitidos. Un gasto FIRE de cero debe rechazarse.
+7. En compuesto, 10.000 EUR iniciales, 200 EUR/mes, 5%, 2% inflación, 20 años: contrastar los totales de demostración.
+8. Para perfil alto en todos los sesgos, contestar 5,5,1 en cada grupo. Comprobar puntuación 100, bloqueo por espera, argumento corto y concentración superior al 10%. Para una comprobación sin fricciones específicas, usar 1,1,5 en cada grupo y marcar la revisión de riesgos.
+9. Exportar JSON y comprobar su contenido. Borrar los datos del navegador al terminar la demostración en un equipo compartido.
+10. Navegar con teclado, móvil y zoom; comprobar las tablas alternativas si los gráficos no cargan. Abrir tests.html y comprobar las 46 pruebas.
+
+## 9. Guion para exponer en clase
+
+Duración orientativa: 7 minutos.
+
+| Tiempo | Demostración | Mensaje financiero |
+|---|---|---|
+| 0:00-0:45 | Presentar el problema y abrir ejemplo | Un saldo bancario no describe por sí solo salud financiera |
+| 0:45-2:00 | Balance, deuda y flujo mensual | Separación entre stock patrimonial y flujo; transferir no es gastar |
+| 2:00-3:30 | FIRE con parámetros iniciales, antes de vincular el flujo | Retirada no es rentabilidad; Fisher exacto; escenarios sin garantías |
+| 3:30-4:30 | Simulador compuesto y compra de 1.000 EUR | Aportaciones frente a rendimientos; euros nominales frente a reales |
+| 4:30-6:15 | Test y laboratorio con perfil alto | El diferenciador transforma sesgos en pausas y comprobaciones |
+| 6:15-7:00 | Pruebas, privacidad y límites | Un prototipo riguroso muestra también lo que no sabe |
 
 ### Cifras de contraste calculadas
 

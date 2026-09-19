@@ -1,12 +1,13 @@
 (() => {
 'use strict';
 const $ = id => document.getElementById(id);
-const money = n => n === null ? 'No definido' : new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR',maximumFractionDigits:2,useGrouping:'always'}).format(n);
+const profileCurrency=()=>{try{return JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}').currency||'EUR';}catch(e){return 'EUR';}};
+const money = n => n === null ? 'No definido' : new Intl.NumberFormat('es-ES',{style:'currency',currency:profileCurrency(),maximumFractionDigits:2,useGrouping:'always'}).format(n);
 const pct = n => n === null ? 'No definido' : new Intl.NumberFormat('es-ES',{style:'percent',maximumFractionDigits:2,useGrouping:'always'}).format(n);
 const decimal = n => new Intl.NumberFormat('es-ES',{maximumFractionDigits:1,useGrouping:'always'}).format(n);
 const escape = x => String(x).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const localDate = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
-const KEY='horizonte-v1', labels={liquid:'Líquido',investment:'Inversión',other:'Otro activo',liability:'Pasivo',income:'Ingreso',expense:'Gasto',transfer:'Transferencia'};
+const KEY='horizonte-v1', WELCOME_KEY='horizonte-welcome-dismissed', PROFILE_KEY='horizonte-profile', labels={liquid:'Líquido',investment:'Inversión',other:'Otro activo',liability:'Pasivo',income:'Ingreso',expense:'Gasto',transfer:'Transferencia'};
 const names={loss:'Aversión a la pérdida',confirmation:'Sesgo de confirmación',confidence:'Exceso de confianza'};
 const blank = () => ({version:2,accounts:[],transactions:[],fire:null,compound:null,answers:null,reviewStarted:null,lastDecision:null,
  budgets:[],retirement:null,loan:null,bank:null,credit:null});
@@ -215,9 +216,26 @@ $('demo').onclick=()=>{
  const date=localDate();state=blank();state.accounts=[{id:uuid(),name:'Fondo de emergencia',kind:'liquid',balance:5000,asOf:date},{id:uuid(),name:'Cartera diversificada ficticia',kind:'investment',balance:30000,asOf:date},{id:uuid(),name:'Participación en vivienda',kind:'other',balance:100000,asOf:date},{id:uuid(),name:'Préstamo pendiente',kind:'liability',balance:20000,asOf:date}];state.transactions=[['income','Nómina','Trabajo',2500],['expense','Vivienda y suministros','Vivienda',1000],['expense','Supermercado','Alimentación',300],['expense','Ocio','Ocio',200],['transfer','Aportación a inversión','Inversión',500]].map(([kind,name,category,amount])=>({id:uuid(),date,kind,name,category,amount}));
  $('month').value=date.slice(0,7);$('fire-form').reset();$('compound-form').reset();$('bias-form').reset();$('decision-form').reset();resetAccount();resetTransaction();$('decision-result').textContent='';state.fire=calculateFire(numericForm($('fire-form')));state.compound=calculateCompound(numericForm($('compound-form')));renderBias();save();renderDashboard();say('Ejemplo ficticio cargado. FIRE comienza con supuestos ilustrativos: usa Traer inversión y flujo para vincularlo al mes.');
 };
-$('clear').onclick=()=>{if(confirm('¿Borrar todos los datos de Horizonte de este navegador? No se borran archivos exportados.')){try{localStorage.removeItem(KEY);location.reload();}catch(e){say('No se pudo borrar el almacenamiento. Usa los ajustes de datos del sitio en tu navegador.');}}};
+$('clear').onclick=()=>{if(confirm('¿Borrar todos los datos de Horizonte de este navegador? No se borran archivos exportados.')){try{localStorage.removeItem(KEY);localStorage.removeItem(PROFILE_KEY);localStorage.removeItem(WELCOME_KEY);location.reload();}catch(e){say('No se pudo borrar el almacenamiento. Usa los ajustes de datos del sitio en tu navegador.');}}};
 renderDashboard();renderBias();
 renderConcentration();
+const welcome=$('welcome'); let startApp=()=>{welcome.hidden=true;try{if($('skip-welcome').checked)localStorage.setItem(WELCOME_KEY,'1');}catch(e){}$('main').focus({preventScroll:true});};
+$('edit-profile').onclick=()=>{welcome.hidden=false;$('welcome-name').focus({preventScroll:true});};
+$('start-app').onclick=startApp;
+$('load-welcome-demo').onclick=()=>{if(!$('welcome-name').reportValidity())return;$('demo').click();startApp();};
+const defaultWelcomeHeading='Entiende tu dinero. Explora tu futuro.';
+const savedName=(()=>{try{return JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}').name||'';}catch(e){return '';}})();
+const savedCurrency=(()=>{try{return JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}').currency||'EUR';}catch(e){return 'EUR';}})();
+if($('welcome-currency'))$('welcome-currency').value=savedCurrency;
+const updateWelcomeName=()=>{const name=$('welcome-name').value.trim(),currency=$('welcome-currency').value;if(!name){$('welcome-heading').textContent=defaultWelcomeHeading;$('user-greeting').textContent='';try{localStorage.removeItem(PROFILE_KEY);}catch(e){}return false;}try{localStorage.setItem(PROFILE_KEY,JSON.stringify({name,currency}));}catch(e){}$('welcome-heading').textContent=`Entiende tu dinero, ${name}. Explora tu futuro.`;$('user-greeting').textContent=`Hola, ${name}`;return true;};
+if(savedName){$('welcome-name').value=savedName;updateWelcomeName();}
+const persistName=updateWelcomeName;
+$('welcome-name').addEventListener('input',persistName);
+$('welcome-currency').addEventListener('change',()=>{if(updateWelcomeName())location.reload();});
+const originalStart=startApp;
+startApp=()=>{if(!persistName()||!$('welcome-name').reportValidity())return;originalStart();say('');};
+ $('start-app').onclick=startApp;
+try{if(localStorage.getItem(WELCOME_KEY)==='1')welcome.hidden=true;}catch(e){}
 try {
  if(state.budgets.length) renderBudgets(Fin.monthlyBudgets({month:advancedMonth,budgets:state.budgets,transactions:state.transactions}));
  if(state.retirement) renderRetirement(Fin.retirementProjection(state.retirement));
