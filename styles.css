@@ -21,8 +21,8 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-body { margin: 0; background: var(--canvas); color: var(--ink); }
+html { width: 100%; max-width: 100%; overflow-x: hidden; scroll-behavior: smooth; }
+body { width: 100%; max-width: 100%; margin: 0; overflow-x: hidden; background: var(--canvas); color: var(--ink); }
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
 
@@ -104,7 +104,7 @@ header p:last-child { max-width: 38rem; margin-bottom: 0; color: #c6d0e1; }
   color: var(--amber-ink);
   background: var(--amber-pale);
 }
-.welcome-panel { position: fixed; inset: 0; z-index: 100; display: grid; grid-template-columns: minmax(0, 1fr) minmax(320px, .8fr); gap: clamp(32px, 8vw, 128px); align-items: center; width: 100%; min-height: 100vh; margin: 0; padding: clamp(28px, 8vw, 100px); overflow: auto; border: 0; border-radius: 0; color: #fff; background: linear-gradient(135deg, rgb(16 26 49 / 94%), rgb(21 38 75 / 70%)), url("assets/alcala-fondo.jpeg") center / cover no-repeat; box-shadow: 0 18px 45px rgb(15 23 42 / 28%); }
+.welcome-panel { position: fixed; inset: 0; z-index: 100; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .8fr); gap: clamp(32px, 8vw, 128px); align-items: center; width: 100%; max-width: 100%; min-height: 100vh; margin: 0; padding: clamp(28px, 8vw, 100px); overflow-x: hidden; overflow-y: auto; border: 0; border-radius: 0; color: #fff; background: linear-gradient(135deg, rgb(16 26 49 / 94%), rgb(21 38 75 / 70%)), url("assets/alcala-fondo.jpeg") center / cover no-repeat; box-shadow: 0 18px 45px rgb(15 23 42 / 28%); }
 .welcome-panel::before, .welcome-panel::after { display: none; }
 .welcome-panel[hidden] { display: none; }
 .welcome-copy, .welcome-map { position: relative; z-index: 1; }
@@ -251,7 +251,6 @@ footer a { color: var(--teal-dark); text-decoration: underline; text-underline-o
   .brand-mark { width: 76px; height: 54px; flex-basis: 76px; }
   .welcome-panel { grid-template-columns: 1fr; padding: 28px 16px; }
   .welcome-fields { grid-template-columns: 1fr; }
-  .welcome-landmark { right: -30vw; bottom: 4vh; width: 145vw; opacity: .72; }
   .toolbar { align-items: stretch; }
   .toolbar #storage-status { flex-basis: 100%; order: 3; }
   .toolbar button { flex: 1 1 auto; }
