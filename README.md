@@ -1,6 +1,6 @@
 # Horizonte: finanzas personales y libertad financiera
 
-Prototipo académico del Proyecto 3 de Sistema Financiero II, Universidad de Málaga. Profesora Dra. Laura Vanesa Lorente Bayona. Estos datos de contexto proceden del encargo; no se presenta como una aplicación oficial ni como una rúbrica verificada de la asignatura. Los marcadores [cite: 1] del encargo no incluyen un documento fuente accesible.
+Prototipo académico del Proyecto 3 de Sistema Financiero II, Universidad de Málaga. Profesora Dra. Laura Vanesa Lorente Bayona. Estos datos de contexto proceden del encargo; no se presenta como una aplicación oficial ni como una rúbrica verificada de la asignatura. Los marcadores del encargo no incluyen un documento fuente accesible.
 
 ## 1. Entrega y alcance
 
