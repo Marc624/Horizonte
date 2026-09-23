@@ -1,6 +1,6 @@
 {
-  "passed": 48,
-  "total": 48,
+  "passed": 49,
+  "total": 49,
   "tests": [
     {
       "name": "Tasa real exacta de Fisher",
@@ -152,6 +152,10 @@
     },
     {
       "name": "Presupuesto calcula desviaciones y gasto no planificado",
+      "passed": true
+    },
+    {
+      "name": "Gastar menos que el plan es favorable",
       "passed": true
     },
     {

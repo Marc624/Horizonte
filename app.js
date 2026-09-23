@@ -53,10 +53,10 @@ function advancedValues(form, percentKeys = []) {
  return data;
 }
 function renderBudgets(result) {
- const rows=result.categories.map(r=>[r.category,money(r.planned),money(r.actual),money(r.deviation),r.status==='over'?'Exceso':r.status==='under'?'Por debajo':'En plan']);
+ const rows=result.categories.map(r=>[r.category,money(r.planned),money(r.actual),money(r.deviation),r.status==='over'?'Exceso · desfavorable':r.status==='under'?'Ahorro frente al plan · favorable':'En plan']);
  $('budget-results').innerHTML=tile('Ahorro del mes',money(result.totals.savings),`Ingresos ${money(result.totals.income)} · tasa ${pct(result.totals.savingRate)}`)+
  `<div class="table-wrap">${table(['Categoría','Plan','Real','Desviación','Estado'],rows)}</div>`+
- `<p class="muted">Total planificado ${money(result.totals.planned)} · real ${money(result.totals.actual)} · desviación ${money(result.totals.deviation)}. Las categorías con plan de 0 € y gasto real aparecen como exceso no planificado.</p>`;
+ `<p class="muted">Total planificado ${money(result.totals.planned)} · real ${money(result.totals.actual)} · desviación ${money(result.totals.deviation)} (plan − real). Una desviación positiva significa ahorro frente al plan y es favorable; una negativa significa exceso. Las categorías con plan de 0 y gasto real aparecen como exceso no planificado.</p>`;
 }
 function addBudgetRow(data={}) {
  const row=document.createElement('div');

@@ -20,7 +20,7 @@ La documentación de GitHub confirma que Pages publica archivos estáticos HTML,
 | styles.css | Estilos propios, responsive y presentación básica sin Tailwind |
 | finance.js | Funciones puras de cálculo y puntuación conductual |
 | app.js | Estado, validaciones de formularios, persistencia, eventos y gráficos |
-| tests.js | Suite de 48 pruebas financieras reproducibles |
+| tests.js | Suite de 49 pruebas financieras reproducibles |
 | tests.html / tests-browser.js | Ejecución de la suite en navegador |
 | verification.json | Resultados de pruebas ejecutadas y ejemplos calculados |
 | README.md | Arquitectura, fórmulas, despliegue y guion de exposición |
@@ -217,7 +217,7 @@ Para evolucionar a un producto real: evaluación de privacidad y protección de 
 
 ## 8. Verificación y límites de pruebas
 
-Se ejecutaron **48 pruebas del núcleo y módulos ampliados**, todas correctas. verification.json contiene los resultados. Se comprueban Fisher exacto, tasas cero y negativas, equivalencia mensual/anual, primer cruce FIRE, objetivo ya alcanzado, objetivo no alcanzado, retirada cero rechazada, fechas de jubilación incoherentes, independencia de coste de oportunidad, exclusión de transferencias, filtros mensuales, categorías equivalentes sin sensibilidad a mayúsculas, tildes o puntos finales, rechazo de categorías vacías tras normalizar, ratios indefinidos, puntuaciones invertidas, presupuestos, jubilación con pensión y conversión nominal-real, préstamo francés y TAE finita, ratios bancarios y scoring explicable.
+Se ejecutaron **49 pruebas del núcleo y módulos ampliados**, todas correctas. verification.json contiene los resultados. Se comprueban Fisher exacto, tasas cero y negativas, equivalencia mensual/anual, primer cruce FIRE, objetivo ya alcanzado, objetivo no alcanzado, retirada cero rechazada, fechas de jubilación incoherentes, independencia de coste de oportunidad, exclusión de transferencias, filtros mensuales, categorías equivalentes sin sensibilidad a mayúsculas, tildes o puntos finales, rechazo de categorías vacías tras normalizar, interpretación favorable del gasto por debajo del plan, ratios indefinidos, puntuaciones invertidas, presupuestos, jubilación con pensión y conversión nominal-real, préstamo francés y TAE finita, ratios bancarios y scoring explicable.
 
 Además de la suite de dominio, se hizo una comprobación funcional en navegador: navegación por los nueve módulos, envío de los formularios de cálculo, juego de decisiones, persistencia tras recargar y ausencia de `NaN`/`Infinity`. Esta comprobación no certifica todos los navegadores ni sustituye pruebas de extremo a extremo.
 
@@ -232,7 +232,7 @@ Además de la suite de dominio, se hizo una comprobación funcional en navegador
 7. En compuesto, 10.000 EUR iniciales, 200 EUR/mes, 5%, 2% inflación, 20 años: contrastar los totales de demostración.
 8. Para perfil alto en todos los sesgos, contestar 5,5,1 en cada grupo. Comprobar puntuación 100, bloqueo por espera, argumento corto y concentración superior al 10%. Para una comprobación sin fricciones específicas, usar 1,1,5 en cada grupo y marcar la revisión de riesgos.
 9. Exportar JSON y comprobar su contenido. Borrar los datos del navegador al terminar la demostración en un equipo compartido.
-10. Navegar con teclado, móvil y zoom; comprobar las tablas alternativas si los gráficos no cargan. Abrir tests.html y comprobar las 48 pruebas.
+10. Navegar con teclado, móvil y zoom; comprobar las tablas alternativas si los gráficos no cargan. Abrir tests.html y comprobar las 49 pruebas.
 
 ## 9. Guion para exponer en clase
 
@@ -275,7 +275,7 @@ Cierre sugerido: "Horizonte no intenta adivinar el mercado. Ordena la situación
 
 La versión 2 conserva la clave `horizonte-v1` para no perder instalaciones existentes y migra raíces con `version: 1` al nuevo esquema (añade `budgets`, `retirement`, `loan`, `bank` y `credit`). No se introducen dependencias de compilación ni servidor.
 
-* **Presupuesto mensual:** `Fin.monthlyBudgets({month, budgets, transactions})` agrupa gastos de caja por categoría, incluye categorías no presupuestadas y devuelve plan, real, desviación, saldo restante, ahorro y tasa de ahorro. `categoryBudgets` es un alias.
+* **Presupuesto mensual:** `Fin.monthlyBudgets({month, budgets, transactions})` agrupa gastos de caja por categoría, incluye categorías no presupuestadas y devuelve plan, real, desviación, saldo restante, ahorro y tasa de ahorro. La desviación es `plan - real`: positiva es ahorro favorable frente al plan y negativa es exceso desfavorable. `categoryBudgets` es un alias.
 * **FIRE y jubilación:** FIRE calcula el objetivo sin pensión; `Fin.retirementProjection` calcula acumulación en euros reales, pensión, gasto, capital requerido (`(gasto-pensión)*12/tasa`) y tres desacumulaciones educativas. El botón «Copiar supuestos FIRE» permite comparar ambas alternativas. No modela impuestos, prestaciones legales, longevidad ni riesgo de secuencia.
 * **Préstamo:** `Fin.loanAmortization` usa amortización francesa, separa principal/interés/comisión en cada cuota y estima la TAE mediante los flujos mensuales. Las comisiones opcionales son `upfrontFee`, `monthlyFee` y `otherFees`.
 * **Banco:** `Fin.bankRatios` devuelve CET1, Tier 1, Tier 2, capital total, apalancamiento (`Tier 1 / activos totales`), depósitos/activos, LCR y NSFR. Los umbrales se pueden proporcionar en `thresholds`; las alertas son pedagógicas y no una evaluación supervisora.

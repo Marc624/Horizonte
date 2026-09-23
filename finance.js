@@ -96,18 +96,19 @@
     const rows = [...categories].sort((a,b) => (planned.get(a)?.category || actual.get(a).category).localeCompare(planned.get(b)?.category || actual.get(b).category, 'es')).map(key => {
       const category = planned.get(key)?.category || actual.get(key).category;
       const budget = planned.get(key)?.amount || 0, spent = actual.get(key)?.amount || 0;
-      const deviation = spent - budget;
+      const deviation = budget - spent;
       return {category, planned: budget, actual: spent, deviation, variance: deviation, remaining: budget - spent,
         utilization: budget === 0 ? (spent === 0 ? null : Infinity) : spent / budget,
-        status: deviation > 0 ? 'over' : deviation < 0 ? 'under' : 'on-plan'};
+        favorable: budget > 0 && deviation > 0,
+        status: spent > budget ? 'over' : spent < budget ? 'under' : 'on-plan'};
     });
     const income = transactions.filter(t => t && t.date?.slice(0, 7) === month && t.kind === 'income')
       .reduce((sum, t) => sum + nonnegative(t.amount, 'Ingreso'), 0);
     const expenses = transactions.filter(t => t && t.date?.slice(0, 7) === month && t.kind === 'expense')
       .reduce((sum, t) => sum + nonnegative(t.amount, 'Gasto'), 0);
     const plannedExpenses = rows.reduce((sum, row) => sum + row.planned, 0);
-    const totals = {planned: plannedExpenses, actual: expenses, deviation: expenses - plannedExpenses,
-      variance: expenses - plannedExpenses, remaining: plannedExpenses - expenses, income,
+    const totals = {planned: plannedExpenses, actual: expenses, deviation: plannedExpenses - expenses,
+      variance: plannedExpenses - expenses, remaining: plannedExpenses - expenses, income,
       expenses, savings: income - expenses, savingRate: income === 0 ? null : (income - expenses) / income};
     return {month, categories: rows, totals, cashSummary: totals};
   }
