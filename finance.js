@@ -67,6 +67,7 @@
     if (typeof value !== 'string' || !value.trim() || value.trim().length > max) throw new Error(name + ': texto no válido');
     return value.trim();
   };
+  const categoryKey = value => value.normalize('NFKD').replace(/\p{Diacritic}/gu, '').toLocaleLowerCase('es').replace(/\.+$/u, '').trim();
   function monthlyBudgets({month, budgets, transactions = []}) {
     monthKey(month);
     const budgetRows = Array.isArray(budgets) ? budgets :
@@ -76,19 +77,25 @@
     budgetRows.forEach(row => {
       const category = text(row.category, 'Categoría', 60);
       const amount = nonnegative(row.planned, 'Presupuesto');
-      if (planned.has(category)) throw new Error('No puede haber categorías repetidas');
-      planned.set(category, amount);
+      const key = categoryKey(category);
+      if (!key) throw new Error('Categoría: texto no válido');
+      if (planned.has(key)) throw new Error('No puede haber categorías repetidas, aunque cambien las mayúsculas');
+      planned.set(key, {category, amount});
     });
     const actual = new Map();
     transactions.forEach(row => {
       if (!row || row.date?.slice(0, 7) !== month || row.kind !== 'expense') return;
       const category = text(row.category, 'Categoría', 60);
       const amount = nonnegative(row.amount, 'Gasto');
-      actual.set(category, (actual.get(category) || 0) + amount);
+      const key = categoryKey(category);
+      if (!key) throw new Error('Categoría: texto no válido');
+      const current = actual.get(key);
+      actual.set(key, {category: current?.category || category, amount: (current?.amount || 0) + amount});
     });
     const categories = new Set([...planned.keys(), ...actual.keys()]);
-    const rows = [...categories].sort((a,b) => a.localeCompare(b, 'es')).map(category => {
-      const budget = planned.get(category) || 0, spent = actual.get(category) || 0;
+    const rows = [...categories].sort((a,b) => (planned.get(a)?.category || actual.get(a).category).localeCompare(planned.get(b)?.category || actual.get(b).category, 'es')).map(key => {
+      const category = planned.get(key)?.category || actual.get(key).category;
+      const budget = planned.get(key)?.amount || 0, spent = actual.get(key)?.amount || 0;
       const deviation = spent - budget;
       return {category, planned: budget, actual: spent, deviation, variance: deviation, remaining: budget - spent,
         utilization: budget === 0 ? (spent === 0 ? null : Infinity) : spent / budget,

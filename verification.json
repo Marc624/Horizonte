@@ -1,6 +1,6 @@
 {
-  "passed": 46,
-  "total": 46,
+  "passed": 48,
+  "total": 48,
   "tests": [
     {
       "name": "Tasa real exacta de Fisher",
@@ -156,6 +156,14 @@
     },
     {
       "name": "Presupuesto rechaza categorías repetidas",
+      "passed": true
+    },
+    {
+      "name": "Presupuesto ignora tildes y puntos finales en categorías",
+      "passed": true
+    },
+    {
+      "name": "Presupuesto rechaza categorías solo con puntos",
       "passed": true
     },
     {

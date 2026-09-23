@@ -1,13 +1,14 @@
 (() => {
 'use strict';
 const $ = id => document.getElementById(id);
-const profileCurrency=()=>{try{return JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}').currency||'EUR';}catch(e){return 'EUR';}};
+const supportedCurrencies=new Set(['EUR','USD','GBP','JPY','CNY','INR','CHF','CAD','AUD','BRL','MXN','KRW','SEK','NOK','DKK']);
+const profileCurrency=()=>{try{const currency=JSON.parse(localStorage.getItem(PROFILE_KEY)||'{}').currency;return supportedCurrencies.has(currency)?currency:'EUR';}catch(e){return 'EUR';}};
 const money = n => n === null ? 'No definido' : new Intl.NumberFormat('es-ES',{style:'currency',currency:profileCurrency(),maximumFractionDigits:2,useGrouping:'always'}).format(n);
 const pct = n => n === null ? 'No definido' : new Intl.NumberFormat('es-ES',{style:'percent',maximumFractionDigits:2,useGrouping:'always'}).format(n);
 const decimal = n => new Intl.NumberFormat('es-ES',{maximumFractionDigits:1,useGrouping:'always'}).format(n);
 const escape = x => String(x).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const localDate = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
-const KEY='horizonte-v1', WELCOME_KEY='horizonte-welcome-dismissed', PROFILE_KEY='horizonte-profile', labels={liquid:'Líquido',investment:'Inversión',other:'Otro activo',liability:'Pasivo',income:'Ingreso',expense:'Gasto',transfer:'Transferencia'};
+const KEY='horizonte-v1', PROFILE_KEY='horizonte-profile', labels={liquid:'Líquido',investment:'Inversión',other:'Otro activo',liability:'Pasivo',income:'Ingreso',expense:'Gasto',transfer:'Transferencia'};
 const names={loss:'Aversión a la pérdida',confirmation:'Sesgo de confirmación',confidence:'Exceso de confianza'};
 const blank = () => ({version:2,accounts:[],transactions:[],fire:null,compound:null,answers:null,reviewStarted:null,lastDecision:null,
  budgets:[],retirement:null,loan:null,bank:null,credit:null});
@@ -44,7 +45,7 @@ function table(head,rows){return `<table><thead><tr>${head.map(h=>`<th>${escape(
 function chart(id,type,chartLabels,datasets){
   if(chartInstances[id])chartInstances[id].destroy();
   if(typeof Chart==='undefined'){const c=$(id);if(!c.parentElement.querySelector('.fallback')){const p=document.createElement('p');p.className='fallback muted';p.textContent='Gráfico no disponible: comprueba la conexión. Todos los valores siguen disponibles en tarjetas y tablas.';c.parentElement.append(p);}return;}
-  chartInstances[id]=new Chart($(id),{type,data:{labels:chartLabels,datasets},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${money(c.parsed.y)}`}}},scales:{x:{title:{display:true,text:id==='cash-chart'?'Mes seleccionado':'Años desde hoy'}},y:{title:{display:true,text:id==='fire-chart'?'EUR actuales':'EUR nominales'},ticks:{callback:v=>new Intl.NumberFormat('es-ES',{notation:'compact',maximumFractionDigits:1}).format(v)},beginAtZero:true}}}});
+  chartInstances[id]=new Chart($(id),{type,data:{labels:chartLabels,datasets},options:{responsive:true,maintainAspectRatio:false,animation:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'bottom'},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${money(c.parsed.y)}`}}},scales:{x:{title:{display:true,text:id==='cash-chart'?'Mes seleccionado':'Años desde hoy'}},y:{title:{display:true,text:id==='fire-chart'?'Moneda elegida · valores actuales':'Moneda elegida · valores nominales'},ticks:{callback:v=>new Intl.NumberFormat('es-ES',{notation:'compact',maximumFractionDigits:1}).format(v)},beginAtZero:true}}}});
 }
 function advancedValues(form, percentKeys = []) {
  const raw=values(form), data={};
@@ -60,7 +61,7 @@ function renderBudgets(result) {
 function addBudgetRow(data={}) {
  const row=document.createElement('div');
  row.className='form-grid budget-row';
- row.innerHTML=`<label>Categoría<input name="budgetCategory" maxlength="60" placeholder="Vivienda, alimentación..." value="${escape(data.category||'')}"></label><label>Importe planificado (€)<input name="budgetPlanned" type="number" min="0" max="1000000000" step="0.01" value="${data.planned ?? 0}"></label><button type="button" class="secondary danger remove-budget-row">Quitar</button>`;
+ row.innerHTML=`<label>Categoría<input name="budgetCategory" maxlength="60" placeholder="Vivienda, alimentación..." value="${escape(data.category||'')}"></label><label>Importe planificado (moneda elegida)<input name="budgetPlanned" type="number" min="0" max="1000000000" step="0.01" value="${data.planned ?? 0}"></label><button type="button" class="secondary danger remove-budget-row">Quitar</button>`;
  $('budget-rows').append(row);
 }
 function renderRetirement(result) {
@@ -216,11 +217,13 @@ $('demo').onclick=()=>{
  const date=localDate();state=blank();state.accounts=[{id:uuid(),name:'Fondo de emergencia',kind:'liquid',balance:5000,asOf:date},{id:uuid(),name:'Cartera diversificada ficticia',kind:'investment',balance:30000,asOf:date},{id:uuid(),name:'Participación en vivienda',kind:'other',balance:100000,asOf:date},{id:uuid(),name:'Préstamo pendiente',kind:'liability',balance:20000,asOf:date}];state.transactions=[['income','Nómina','Trabajo',2500],['expense','Vivienda y suministros','Vivienda',1000],['expense','Supermercado','Alimentación',300],['expense','Ocio','Ocio',200],['transfer','Aportación a inversión','Inversión',500]].map(([kind,name,category,amount])=>({id:uuid(),date,kind,name,category,amount}));
  $('month').value=date.slice(0,7);$('fire-form').reset();$('compound-form').reset();$('bias-form').reset();$('decision-form').reset();resetAccount();resetTransaction();$('decision-result').textContent='';state.fire=calculateFire(numericForm($('fire-form')));state.compound=calculateCompound(numericForm($('compound-form')));renderBias();save();renderDashboard();say('Ejemplo ficticio cargado. FIRE comienza con supuestos ilustrativos: usa Traer inversión y flujo para vincularlo al mes.');
 };
-$('clear').onclick=()=>{if(confirm('¿Borrar todos los datos de Horizonte de este navegador? No se borran archivos exportados.')){try{localStorage.removeItem(KEY);localStorage.removeItem(PROFILE_KEY);localStorage.removeItem(WELCOME_KEY);location.reload();}catch(e){say('No se pudo borrar el almacenamiento. Usa los ajustes de datos del sitio en tu navegador.');}}};
+$('clear').onclick=()=>{if(confirm('¿Borrar todos los datos de Horizonte de este navegador? No se borran archivos exportados.')){try{localStorage.removeItem(KEY);localStorage.removeItem(PROFILE_KEY);location.reload();}catch(e){say('No se pudo borrar el almacenamiento. Usa los ajustes de datos del sitio en tu navegador.');}}};
 renderDashboard();renderBias();
 renderConcentration();
-const welcome=$('welcome'); let startApp=()=>{welcome.hidden=true;try{if($('skip-welcome').checked)localStorage.setItem(WELCOME_KEY,'1');}catch(e){}$('main').focus({preventScroll:true});};
-$('edit-profile').onclick=()=>{welcome.hidden=false;$('welcome-name').focus({preventScroll:true});};
+const welcome=$('welcome');
+const lockWelcome=locked=>{welcome.hidden=!locked;document.body.classList.toggle('welcome-open',locked);};
+let startApp=()=>{lockWelcome(false);window.scrollTo(0,0);requestAnimationFrame(()=>window.scrollTo(0,0));$('main').focus({preventScroll:true});};
+$('edit-profile').onclick=()=>{lockWelcome(true);$('welcome-name').focus({preventScroll:true});};
 $('start-app').onclick=startApp;
 $('load-welcome-demo').onclick=()=>{if(!$('welcome-name').reportValidity())return;$('demo').click();startApp();};
 const defaultWelcomeHeading='Entiende tu dinero. Explora tu futuro.';
@@ -235,7 +238,7 @@ $('welcome-currency').addEventListener('change',()=>{if(updateWelcomeName())loca
 const originalStart=startApp;
 startApp=()=>{if(!persistName()||!$('welcome-name').reportValidity())return;originalStart();say('');};
  $('start-app').onclick=startApp;
-try{if(localStorage.getItem(WELCOME_KEY)==='1')welcome.hidden=true;}catch(e){}
+lockWelcome(true);
 try {
  if(state.budgets.length) renderBudgets(Fin.monthlyBudgets({month:advancedMonth,budgets:state.budgets,transactions:state.transactions}));
  if(state.retirement) renderRetirement(Fin.retirementProjection(state.retirement));

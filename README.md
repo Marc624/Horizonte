@@ -1,10 +1,10 @@
 # Horizonte: finanzas personales y libertad financiera
 
-Prototipo académico del Proyecto 3 de Sistema Financiero II, Universidad de Málaga. Profesora Dra. Laura Vanesa Lorente Bayona. Estos datos de contexto proceden del encargo; no se presenta como una aplicación oficial ni como una rúbrica verificada de la asignatura. Los marcadores del encargo no incluyen un documento fuente accesible.
+Prototipo académico del Proyecto 3 de Sistema Financiero II, Universidad de Málaga. Profesora Dra. Laura Vanesa Lorente Bayona. Estos datos de contexto proceden del encargo; no se presenta como una aplicación oficial ni como una rúbrica verificada de la asignatura. Los marcadores [cite: 1] del encargo no incluyen un documento fuente accesible.
 
 ## 1. Entrega y alcance
 
-Web estática funcional en HTML5, Tailwind CSS y JavaScript, con Chart.js. No requiere servidor de aplicación, API, claves, instalación de paquetes ni base de datos externa. Se despliega en GitHub Pages. El estado se conserva en localStorage del navegador. Incluye nueve apartados, ejemplo ficticio, edición y eliminación de registros, exportación JSON, tablas alternativas a gráficos y pruebas del núcleo financiero.
+Web estática funcional en HTML5, Tailwind CSS y JavaScript, con Chart.js. No requiere servidor de aplicación, API, claves, instalación de paquetes ni base de datos externa. Se despliega en GitHub Pages. El estado se conserva en localStorage del navegador. Incluye nueve módulos navegables (FIRE y jubilación se presentan juntos), ejemplo ficticio, edición y eliminación de registros, exportación JSON, tablas alternativas a gráficos y pruebas del núcleo financiero.
 
 No hay ejecución de inversiones, conexión bancaria, usuarios compartidos, autenticación, sincronización, importación de copias JSON ni almacenamiento cifrado. La exportación es una copia de los datos para consulta o procesamiento externo, no un flujo de restauración incorporado. Las decisiones del laboratorio no son órdenes. Los escenarios son deterministas e ilustrativos, no pronósticos ni probabilidades.
 
@@ -20,7 +20,7 @@ La documentación de GitHub confirma que Pages publica archivos estáticos HTML,
 | styles.css | Estilos propios, responsive y presentación básica sin Tailwind |
 | finance.js | Funciones puras de cálculo y puntuación conductual |
 | app.js | Estado, validaciones de formularios, persistencia, eventos y gráficos |
-| tests.js | Suite de 46 pruebas financieras reproducibles |
+| tests.js | Suite de 48 pruebas financieras reproducibles |
 | tests.html / tests-browser.js | Ejecución de la suite en navegador |
 | verification.json | Resultados de pruebas ejecutadas y ejemplos calculados |
 | README.md | Arquitectura, fórmulas, despliegue y guion de exposición |
@@ -57,7 +57,7 @@ El prototipo es monousuario y guarda una sola raíz JSON bajo `horizonte-v1`. No
 - **Criterio de caja.** Los gastos incluyen pagos efectivos, incluso la cuota completa de un préstamo si se registra. No se descompone amortización e interés; no es una cuenta de resultados por devengo. Se debe actualizar la deuda pendiente manualmente.
 - **Transferencias internas excluidas.** Mover dinero a una cuenta o inversión propia no es gasto ni ingreso. El ahorro es capacidad previa a su distribución entre cuentas o inversiones.
 - **Capital FIRE no es patrimonio neto.** El botón de vinculación toma únicamente los activos de inversión, no vivienda ni liquidez. El usuario ajusta el capital realmente disponible y contempla sus deudas y obligaciones en el gasto objetivo.
-- **Valores introducidos en euros.** No se convierten divisas. Los resultados se calculan sin redondeos intermedios y se muestran con dos decimales. No se utiliza el prototipo como motor de liquidación monetaria.
+- **Moneda elegida.** La bienvenida permite seleccionar 15 monedas. No se convierten divisas: la elección solo cambia el formato visual y todos los importes deben pertenecer a la misma moneda. Los resultados se calculan sin redondeos intermedios y se muestran con dos decimales. No se utiliza el prototipo como motor de liquidación monetaria.
 - **Fechas locales.** Las fechas de movimientos usan YYYY-MM-DD sin conversión UTC; el periodo mensual es YYYY-MM. La espera conductual usa tiempo transcurrido desde una marca temporal.
 
 ## 4. Fórmulas y supuestos
@@ -203,7 +203,7 @@ Accesibilidad: etiquetas visibles, controles HTML nativos, foco visible, enlace 
 3. En Settings -> Pages -> Build and deployment elegir Deploy from a branch.
 4. Seleccionar la rama main y la carpeta /(root), y guardar.
 5. Cuando GitHub muestre la dirección publicada, abrirla y comprobar index.html y tests.html. No se proporciona una URL ficticia ni se ha publicado por el usuario.
-6. Revisar a 360 px y en escritorio, comprobar los nueve apartados y el guardado tras recargar.
+6. Revisar a 360 px y en escritorio, comprobar los nueve módulos y el guardado tras recargar.
 
 GitHub permite publicar desde una rama y su carpeta raíz o /docs. [GitHub Docs](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
 
@@ -217,9 +217,9 @@ Para evolucionar a un producto real: evaluación de privacidad y protección de 
 
 ## 8. Verificación y límites de pruebas
 
-Se ejecutaron **46 pruebas del núcleo y módulos ampliados**, todas correctas. verification.json contiene los resultados. Se comprueban Fisher exacto, tasas cero y negativas, equivalencia mensual/anual, primer cruce FIRE, objetivo ya alcanzado, objetivo no alcanzado, retirada cero rechazada, fechas de jubilación incoherentes, independencia de coste de oportunidad, exclusión de transferencias, filtros mensuales, ratios indefinidos, puntuaciones invertidas, presupuestos, jubilación con pensión y conversión nominal-real, préstamo francés y TAE finita, ratios bancarios y scoring explicable.
+Se ejecutaron **48 pruebas del núcleo y módulos ampliados**, todas correctas. verification.json contiene los resultados. Se comprueban Fisher exacto, tasas cero y negativas, equivalencia mensual/anual, primer cruce FIRE, objetivo ya alcanzado, objetivo no alcanzado, retirada cero rechazada, fechas de jubilación incoherentes, independencia de coste de oportunidad, exclusión de transferencias, filtros mensuales, categorías equivalentes sin sensibilidad a mayúsculas, tildes o puntos finales, rechazo de categorías vacías tras normalizar, ratios indefinidos, puntuaciones invertidas, presupuestos, jubilación con pensión y conversión nominal-real, préstamo francés y TAE finita, ratios bancarios y scoring explicable.
 
-Además de la suite de dominio, se hizo una comprobación funcional en navegador: navegación por los nueve apartados, envío de los formularios de cálculo, juego de decisiones, persistencia tras recargar y ausencia de `NaN`/`Infinity`. Esta comprobación no certifica todos los navegadores ni sustituye pruebas de extremo a extremo.
+Además de la suite de dominio, se hizo una comprobación funcional en navegador: navegación por los nueve módulos, envío de los formularios de cálculo, juego de decisiones, persistencia tras recargar y ausencia de `NaN`/`Infinity`. Esta comprobación no certifica todos los navegadores ni sustituye pruebas de extremo a extremo.
 
 ### Checklist manual antes de clase
 
@@ -232,7 +232,7 @@ Además de la suite de dominio, se hizo una comprobación funcional en navegador
 7. En compuesto, 10.000 EUR iniciales, 200 EUR/mes, 5%, 2% inflación, 20 años: contrastar los totales de demostración.
 8. Para perfil alto en todos los sesgos, contestar 5,5,1 en cada grupo. Comprobar puntuación 100, bloqueo por espera, argumento corto y concentración superior al 10%. Para una comprobación sin fricciones específicas, usar 1,1,5 en cada grupo y marcar la revisión de riesgos.
 9. Exportar JSON y comprobar su contenido. Borrar los datos del navegador al terminar la demostración en un equipo compartido.
-10. Navegar con teclado, móvil y zoom; comprobar las tablas alternativas si los gráficos no cargan. Abrir tests.html y comprobar las 46 pruebas.
+10. Navegar con teclado, móvil y zoom; comprobar las tablas alternativas si los gráficos no cargan. Abrir tests.html y comprobar las 48 pruebas.
 
 ## 9. Guion para exponer en clase
 
