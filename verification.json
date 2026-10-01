@@ -1,6 +1,6 @@
 {
-  "passed": 49,
-  "total": 49,
+  "passed": 52,
+  "total": 52,
   "tests": [
     {
       "name": "Tasa real exacta de Fisher",
@@ -95,6 +95,10 @@
       "passed": true
     },
     {
+      "name": "Serie FIRE empieza en la edad actual y sitúa el cruce mensual",
+      "passed": true
+    },
+    {
       "name": "Compuesto separa aportado y rendimiento",
       "passed": true
     },
@@ -127,27 +131,43 @@
       "passed": true
     },
     {
-      "name": "Sesgo mínimo con ítems inversos",
+      "name": "Guía prioriza depósitos y letras con plazo corto y baja tolerancia",
       "passed": true
     },
     {
-      "name": "Sesgo máximo con ítems inversos",
+      "name": "Guía cautelosa deja fondos globales para comparar si tolera caídas pequeñas",
       "passed": true
     },
     {
-      "name": "Respuestas neutras no equivalen a ausencia de sesgo",
+      "name": "Guía con mayor tolerancia explora fondos globales como opción principal",
       "passed": true
     },
     {
-      "name": "Test incompleto rechazado",
+      "name": "Guía conserva prudencia si necesita liquidez inmediata",
       "passed": true
     },
     {
-      "name": "Respuesta fuera de escala rechazada",
+      "name": "Guía de ingresos compara renta fija directa y fondos",
       "passed": true
     },
     {
-      "name": "Respuesta fraccionaria rechazada",
+      "name": "Guía separa broker de clases de activo",
+      "passed": true
+    },
+    {
+      "name": "Guía rechaza respuestas fuera de catálogo",
+      "passed": true
+    },
+    {
+      "name": "Guía prioriza reserva si no hay fondo de emergencia",
+      "passed": true
+    },
+    {
+      "name": "Guía invita a comparar amortizar deuda cara con rendimiento incierto",
+      "passed": true
+    },
+    {
+      "name": "Guía avisa si no se conoce la reserva o la deuda",
       "passed": true
     },
     {
@@ -188,14 +208,6 @@
     },
     {
       "name": "TAE del préstamo es finita con valores normales",
-      "passed": true
-    },
-    {
-      "name": "Ratios bancarios generan warning configurable y apalancamiento",
-      "passed": true
-    },
-    {
-      "name": "Score empresarial devuelve razones y ratios",
       "passed": true
     }
   ],

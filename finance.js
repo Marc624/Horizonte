@@ -24,15 +24,16 @@
     const annual = realRate(nominal, inflation), i = Math.expm1(Math.log1p(annual) / 12);
     const target = spending * 12 / withdrawal;
     let balance = initial, reached = balance >= target ? 0 : null;
-    const series = [{year:0, balance, paid:initial}];
+    const series = [{year:0, age, balance, paid:initial}], monthlySeries = [{year:0, age, balance, paid:initial}];
     for (let month = 1; month <= horizon * 12; month++) {
       balance = balance * (1 + i) + contribution;
       if (reached === null && balance >= target) reached = month;
-      if (month % 12 === 0) series.push({year:month / 12, balance, paid:initial + contribution * month});
+      monthlySeries.push({year:month / 12, age:age + month / 12, balance, paid:initial + contribution * month});
+      if (month % 12 === 0) series.push({year:month / 12, age:age + month / 12, balance, paid:initial + contribution * month});
     }
     const retirementMonths = Math.round((retirementAge - age) * 12);
     const atRetirement = retirementMonths <= 1200 ? futureValue(initial, contribution, annual, retirementMonths) : null;
-    return {target, annual, reached, years: reached === null ? null : reached / 12, age: reached === null ? null : age + reached / 12, atRetirement, series};
+    return {target, annual, reached, years: reached === null ? null : reached / 12, age: reached === null ? null : age + reached / 12, atRetirement, series, monthlySeries};
   }
   function compound({initial, contribution, nominal, inflation, years, purchase}) {
     nonnegative(purchase, 'Compra');
@@ -195,81 +196,88 @@
     return {principal, annualNominalRate, monthlyRate, termMonths, payment, totalInterest,
       totalFees: fees, totalPaid, tae, table, startDate};
   }
-  function bankRatios({
-    cet1, tier1, tier2, riskWeightedAssets, totalAssets = 0, deposits = 0,
-    highQualityLiquidAssets = 0, netCashOutflows30d = 0,
-    availableStableFunding = 0, requiredStableFunding = 0, thresholds = {}
-  }) {
-    [cet1, tier1, tier2, riskWeightedAssets, totalAssets, deposits, highQualityLiquidAssets,
-      netCashOutflows30d, availableStableFunding, requiredStableFunding].forEach((v, i) =>
-      nonnegative(v, ['CET1','Tier 1','Tier 2','APR','Activos','Depósitos','HQLA','Salidas netas','ASF','RSF'][i]));
-    if (riskWeightedAssets <= 0 || totalAssets <= 0 || netCashOutflows30d <= 0 || requiredStableFunding <= 0)
-      throw new Error('Denominadores bancarios deben ser positivos');
-    if (tier1 < cet1) throw new Error('Tier 1 debe incluir al menos CET1');
-    const t = Object.assign({cet1: .045, tier1: .06, totalCapital: .08, leverage: .03, lcr: 1, nsfr: 1}, thresholds);
-    Object.values(t).forEach(value => { finite(value, 'Umbral'); if (value < 0) throw new Error('Umbral no válido'); });
-    const ratios = {cet1: cet1 / riskWeightedAssets, tier1: tier1 / riskWeightedAssets,
-      tier2: tier2 / riskWeightedAssets, totalCapital: (tier1 + tier2) / riskWeightedAssets,
-      leverage: tier1 / totalAssets, depositToAssets: deposits / totalAssets, lcr: highQualityLiquidAssets / netCashOutflows30d,
-      nsfr: availableStableFunding / requiredStableFunding};
-    const checks = [['cet1','CET1'],['tier1','Tier 1'],['totalCapital','Capital total'],['leverage','Apalancamiento'],['lcr','LCR'],['nsfr','NSFR']];
-    if (Object.prototype.hasOwnProperty.call(t, 'depositToAssets'))
-      checks.push(['depositToAssets','Depósitos / activos']);
-    const warnings = checks.filter(([key]) => ratios[key] < (t[key] ?? 0))
-      .map(([, label]) => `${label} por debajo del umbral`);
-    return {ratios, thresholds: t, warnings, sound: warnings.length === 0, deposits};
-  }
-  function businessCreditScore({
-    revenue, ebitda, netIncome, totalDebt, annualDebtService, currentAssets,
-    currentLiabilities, yearsInBusiness, latePayments = 0, industryRisk = 0, requestedLoan = 0
-  }) {
-    nonnegative(revenue, 'Ingresos'); finite(ebitda, 'EBITDA'); finite(netIncome, 'Beneficio neto');
-    [totalDebt, annualDebtService, currentAssets, currentLiabilities, yearsInBusiness,
-      latePayments, industryRisk, requestedLoan].forEach((v, i) => nonnegative(v,
-      ['Deuda','Servicio deuda','Activo corriente','Pasivo corriente','Antigüedad',
-        'Impagos','Riesgo sectorial','Préstamo'][i]));
-    if (revenue <= 0 || currentLiabilities <= 0 || annualDebtService <= 0 ||
-      industryRisk > 100 || latePayments > 100) throw new Error('Datos de crédito no válidos');
-    const ratios = {ebitdaMargin: ebitda / revenue, netMargin: netIncome / revenue,
-      debtToRevenue: totalDebt / revenue, dscr: ebitda / annualDebtService,
-      currentRatio: currentAssets / currentLiabilities,
-      debtAfterLoanToRevenue: (totalDebt + requestedLoan) / revenue};
-    const components = [
-      {key:'dscr', label:'Cobertura del servicio de deuda', value:Math.max(0, Math.min(100, ratios.dscr / 2 * 100)), weight:.35, reason:ratios.dscr >= 1.5 ? 'cobertura sólida' : 'cobertura ajustada'},
-      {key:'leverage', label:'Endeudamiento sobre ingresos', value:Math.max(0, 100 - ratios.debtAfterLoanToRevenue * 100), weight:.25, reason:ratios.debtAfterLoanToRevenue <= 2 ? 'apalancamiento moderado' : 'apalancamiento elevado'},
-      {key:'liquidity', label:'Liquidez corriente', value:Math.min(100, ratios.currentRatio / 2 * 100), weight:.2, reason:ratios.currentRatio >= 1.2 ? 'liquidez suficiente' : 'liquidez limitada'},
-      {key:'history', label:'Historial y sector', value:Math.max(0, Math.min(100, 100 - latePayments * 2 - industryRisk + Math.min(yearsInBusiness, 10) * 2)), weight:.2, reason:latePayments === 0 && industryRisk < 30 && yearsInBusiness >= 3 ? 'historial y trayectoria favorables' : 'revisar historial, trayectoria o sector'}
-    ];
-    const score = components.reduce((sum, component) => sum + component.value * component.weight, 0);
-    const rating = score >= 80 ? 'A' : score >= 65 ? 'B' : score >= 50 ? 'C' : 'D';
-    return {score, rating, ratios, components, decision: score >= 60 ? 'Revisar favorablemente' : 'Revisar con cautela',
-      explanations: components.map(c => `${c.label}: ${c.reason}`), educational: true};
-  }
-  const QUESTIONS = [
-    {group:'loss', text:'Tu inversión cae un 25% y la mantienes solo para no reconocer la pérdida, aunque la razón original para comprar ya no sea válida.', reverse:false},
-    {group:'loss', text:'Después de una caída temporal del mercado, abandonarías tu plan sin revisar antes sus fundamentos.', reverse:false},
-    {group:'loss', text:'Si una revisión objetiva demuestra que tu decisión inicial era incorrecta, aceptarías la pérdida y cambiarías de plan.', reverse:true},
-    {group:'confirmation', text:'Antes de invertir, buscarías sobre todo opiniones y noticias que confirmen la opción que ya te gusta.', reverse:false},
-    {group:'confirmation', text:'Al revisar una inversión, restarías importancia a los datos que contradicen tu hipótesis.', reverse:false},
-    {group:'confirmation', text:'Antes de invertir, buscarías activamente un argumento sólido que explique por qué podrías estar equivocado.', reverse:true},
-    {group:'confidence', text:'Crees que podrías anticipar los movimientos del mercado mejor que la mayoría de las personas.', reverse:false},
-    {group:'confidence', text:'Después de varias ganancias, aumentarías mucho tu exposición sin volver a revisar el riesgo total.', reverse:false},
-    {group:'confidence', text:'Antes de decidir, escribirías qué podría salir mal y qué evidencia demostraría que estás equivocado.', reverse:true}
+  const INVESTMENT_OPTIONS = [
+    {id:'deposit',name:'Cuenta remunerada o depósito',type:'Conservación',description:'Interés ofrecido durante unas condiciones y un plazo concretos. Comprueba si es fijo o variable, las comisiones y la protección de depósitos aplicable en tu país y entidad.'},
+    {id:'treasury-bills',name:'Letras y deuda pública de corto plazo',type:'Renta fija directa',description:'Deuda soberana con vencimiento. El resultado depende del precio, plazo y emisor; vender antes del vencimiento puede implicar pérdidas y no existe el mismo riesgo en todos los países.'},
+    {id:'money-market',name:'Fondo monetario',type:'Fondo de inversión',description:'Invierte en instrumentos de corto plazo. No es un depósito, el capital no está garantizado y su valor y liquidez pueden variar.'},
+    {id:'bond-ladder',name:'Bonos individuales o escalera de vencimientos',type:'Renta fija directa',description:'Permite conocer vencimientos y pagos previstos del emisor. Existe riesgo de impago, inflación y pérdida si se vende antes del vencimiento.'},
+    {id:'bond-fund',name:'Fondo de renta fija',type:'Fondo de inversión',description:'Diversifica bonos, pero su valor fluctúa con los tipos de interés y la calidad crediticia; normalmente no tiene una fecha en que garantice recuperar el capital.'},
+    {id:'balanced-fund',name:'Fondo mixto o cartera diversificada',type:'Fondo de inversión',description:'Combina activos como acciones y bonos. La mezcla y el rebalanceo varían; puede perder valor y no garantiza una rentabilidad.'},
+    {id:'global-index',name:'Fondo indexado o ETF global diversificado',type:'Fondo / vehículo cotizado',description:'Busca replicar un índice amplio con una cartera diversificada. Puede caer mucho y tardar años en recuperarse; compara índice, costes, fiscalidad y estructura.'},
+    {id:'individual-stocks',name:'Acciones individuales',type:'Renta variable directa',description:'Participación en empresas con riesgo de pérdida significativa y concentración. Requiere analizar empresas; una acción no equivale a un fondo diversificado.'},
+    {id:'pension-wrapper',name:'Plan o producto de pensiones',type:'Envoltorio de inversión',description:'Es una estructura con reglas de aportación, inversión, liquidez e impuestos que dependen del país; el resultado depende de los activos subyacentes y no necesariamente está garantizado.'},
+    {id:'reit',name:'Fondos inmobiliarios cotizados o REIT',type:'Activo cotizado',description:'Exposición inmobiliaria a través de títulos; puede fluctuar con el mercado, tipos, deuda y situación del sector. No equivale a comprar una vivienda.'},
+    {id:'commodities',name:'Materias primas y oro',type:'Activo / exposición temática',description:'Su precio puede ser muy volátil y no siempre genera intereses o dividendos. El producto usado puede añadir costes, derivados o riesgo de emisor.'},
+    {id:'crypto',name:'Criptoactivos',type:'Alto riesgo',description:'Precios muy volátiles, riesgos de custodia, fraude, plataforma y regulación. Puedes perder gran parte o todo el dinero invertido.'},
+    {id:'forex-cfd',name:'Forex, CFD y derivados apalancados',type:'Alto riesgo / especulación',description:'El apalancamiento puede multiplicar pérdidas rápidamente; no son una base prudente para financiar objetivos de jubilación ni equivalen a invertir en un fondo.'},
+    {id:'active-trading',name:'Trading frecuente o intradía',type:'Estrategia especulativa',description:'Busca aprovechar movimientos de corto plazo; costes, errores y volatilidad pueden erosionar el capital. No hay rentabilidad asegurada ni el simulador puede validar una estrategia.'},
+    {id:'broker',name:'Broker o plataforma',type:'Intermediario, no activo',description:'Es el canal para operar, no una inversión ni una fuente de rentabilidad. Revisa autorización en tu jurisdicción, custodia, comisiones, conflictos y productos ofrecidos.'}
   ];
-  function biases(answers) {
-    if (!Array.isArray(answers) || answers.length !== QUESTIONS.length || answers.some(a => !Number.isInteger(a) || a < 1 || a > 5)) throw new Error('Responde las nueve preguntas');
-    return ['loss','confirmation','confidence'].map(group => {
-      const values = QUESTIONS.map((q,k) => ({q,a:answers[k]})).filter(x => x.q.group === group).map(x => x.q.reverse ? 6-x.a : x.a);
-      const score = (values.reduce((a,b)=>a+b,0) / values.length - 1) * 25;
-      return {group, score, level:score >= 65 ? 'Alta' : score >= 35 ? 'Moderada' : 'Baja'};
-    });
+  const GUIDE_VALUES = {
+    horizon:['short','medium','long'],
+    liquidity:['high','some','low'],
+    lossTolerance:['none','small','substantial'],
+    experience:['beginner','some','experienced'],
+    goal:['preserve','income','growth'],
+    emergencyFund:['ready','partial','none','unknown'],
+    highInterestDebt:['yes','no','unknown']
+  };
+  function investmentGuide(profile) {
+    if(!profile || typeof profile!=='object' ||
+      Object.entries(GUIDE_VALUES).some(([key,allowed])=>!allowed.includes(profile[key])))
+      throw new Error('Completa todas las respuestas de orientación');
+    const shortTerm=profile.horizon==='short' || profile.liquidity==='high' || profile.lossTolerance==='none';
+    let focusIds, compareIds;
+    if(shortTerm) {
+      focusIds=profile.goal==='income'?['deposit','treasury-bills']:['deposit','treasury-bills'];
+      compareIds=['money-market'];
+    } else if(profile.horizon==='medium') {
+      focusIds=profile.goal==='income'?['treasury-bills','bond-ladder']:['deposit','treasury-bills'];
+      compareIds=['money-market','bond-fund'];
+      if(profile.lossTolerance==='substantial')compareIds.push('balanced-fund');
+    } else if(profile.goal==='preserve') {
+      focusIds=['deposit','treasury-bills'];
+      compareIds=['money-market','bond-fund','balanced-fund'];
+    } else if(profile.goal==='income') {
+      focusIds=['treasury-bills','bond-ladder','bond-fund'];
+      compareIds=['deposit','balanced-fund'];
+    } else if(profile.lossTolerance==='small') {
+      focusIds=['balanced-fund','bond-fund'];
+      compareIds=['global-index'];
+    } else {
+      focusIds=['global-index','balanced-fund'];
+      compareIds=['bond-fund'];
+      if(profile.experience==='experienced')compareIds.push('individual-stocks','reit');
+    }
+    if(profile.goal==='growth' && profile.horizon==='long' && !shortTerm && profile.experience!=='beginner')
+      compareIds.push('individual-stocks');
+    if(profile.goal==='growth' && profile.horizon==='long' && !shortTerm)
+      compareIds.push('pension-wrapper');
+    const optionsById=new Map(INVESTMENT_OPTIONS.map(option=>[option.id,option]));
+    const priorities=[];
+    if(profile.emergencyFund==='none')priorities.push('Aún no tienes un fondo de emergencia: antes de invertir dinero que podrías necesitar, prioriza crear una reserva líquida para imprevistos.');
+    if(profile.emergencyFund==='partial')priorities.push('Tu fondo de emergencia está incompleto: valora completar una reserva accesible antes de asumir riesgos con ese dinero.');
+    if(profile.highInterestDebt==='yes')priorities.push('Indicas deuda de interés alto: compara su coste efectivo con cualquier rendimiento incierto y revisa si amortizarla es prioritario antes de invertir.');
+    if(profile.emergencyFund==='unknown'||profile.highInterestDebt==='unknown')priorities.push('No indicaste fondo de emergencia o deuda de interés alto; revisa esos puntos, porque pueden cambiar qué dinero está disponible para invertir.');
+    return {
+      focus:focusIds.map(id=>({id,...optionsById.get(id)})),
+      compare:[...new Set(compareIds)].filter(id=>!focusIds.includes(id)).map(id=>({id,...optionsById.get(id)})),
+      highRisk:['crypto','forex-cfd','active-trading'].map(id=>optionsById.get(id)),
+      intermediary:optionsById.get('broker'),
+      priorities,
+      context:shortTerm
+        ? 'Por el plazo corto, la necesidad de liquidez o la poca tolerancia a pérdidas que indicaste, prioriza aprender sobre opciones de menor volatilidad. Ninguna está libre de riesgos ni garantiza el rendimiento.'
+        : profile.horizon==='medium'
+          ? 'Con un plazo intermedio, un fondo de renta variable puede caer justo cuando necesites el dinero. Compara vencimientos y riesgos antes de asumir volatilidad.'
+          : 'Con un plazo largo y capacidad declarada para soportar fluctuaciones, puedes investigar fondos diversificados; un horizonte largo no elimina la posibilidad de pérdidas.',
+      educational:true
+    };
   }
-  const api = {realRate, futureValue, fire, compound, dashboard, biases, QUESTIONS,
+  const api = {realRate, futureValue, fire, compound, dashboard,
+    investmentGuide, INVESTMENT_OPTIONS,
     monthlyBudgets, monthlyBudget: monthlyBudgets, categoryBudgets: monthlyBudgets, monthlyCategoryBudget: monthlyBudgets,
     retirementProjection, retirementInvestmentProjection: retirementProjection, retirement: retirementProjection,
-    loanAmortization, frenchLoan: loanAmortization, amortizationFrench: loanAmortization, loan: loanAmortization,
-    bankRatios, capitalRatios: bankRatios, bankSolvency: bankRatios, businessCreditScore,
-    businessCreditScoring: businessCreditScore, creditScoring: businessCreditScore, creditScore: businessCreditScore};
+    loanAmortization, frenchLoan: loanAmortization, amortizationFrench: loanAmortization, loan: loanAmortization};
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.Fin = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

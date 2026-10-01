@@ -4,9 +4,9 @@ Prototipo académico del Proyecto 3 de Sistema Financiero II, Universidad de Má
 
 ## 1. Entrega y alcance
 
-Web estática funcional en HTML5, Tailwind CSS y JavaScript, con Chart.js. No requiere servidor de aplicación, API, claves, instalación de paquetes ni base de datos externa. Se despliega en GitHub Pages. El estado se conserva en localStorage del navegador. Incluye nueve módulos navegables (FIRE y jubilación se presentan juntos), ejemplo ficticio, edición y eliminación de registros, exportación JSON, tablas alternativas a gráficos y pruebas del núcleo financiero.
+Web estática funcional en HTML5, Tailwind CSS y JavaScript, con Chart.js. No requiere servidor de aplicación, API, claves, instalación de paquetes ni base de datos externa. Se despliega en GitHub Pages. El estado se conserva en localStorage del navegador. Incluye seis módulos personales y un glosario, con ejemplo ficticio, edición y eliminación de registros, exportación JSON, tablas alternativas a gráficos y pruebas del núcleo financiero.
 
-No hay ejecución de inversiones, conexión bancaria, usuarios compartidos, autenticación, sincronización, importación de copias JSON ni almacenamiento cifrado. La exportación es una copia de los datos para consulta o procesamiento externo, no un flujo de restauración incorporado. Las decisiones del laboratorio no son órdenes. Los escenarios son deterministas e ilustrativos, no pronósticos ni probabilidades.
+No hay ejecución de inversiones, conexión bancaria, usuarios compartidos, autenticación, sincronización, importación de copias JSON ni almacenamiento cifrado. La exportación es una copia de los datos para consulta o procesamiento externo, no un flujo de restauración incorporado. La orientación de inversiones no elige ni contrata productos. Los escenarios son deterministas e ilustrativos, no pronósticos ni probabilidades.
 
 En la pantalla de bienvenida se puede elegir una de 15 monedas habituales. La preferencia se guarda junto al nombre en `horizonte-profile` y se usa solo para formatear importes; los cálculos no cambian de escala ni realizan conversiones entre divisas. Los perfiles anteriores sin moneda conservan EUR por compatibilidad. El botón «Cambiar nombre o moneda» permite volver a editar esta preferencia después de cerrar la introducción sin borrar los datos financieros.
 
@@ -18,9 +18,9 @@ La documentación de GitHub confirma que Pages publica archivos estáticos HTML,
 |---|---|
 | index.html | Pantallas, formularios accesibles y contenedores de gráficos |
 | styles.css | Estilos propios, responsive y presentación básica sin Tailwind |
-| finance.js | Funciones puras de cálculo y puntuación conductual |
+| finance.js | Funciones puras de cálculo y orientación educativa de inversión |
 | app.js | Estado, validaciones de formularios, persistencia, eventos y gráficos |
-| tests.js | Suite de 49 pruebas financieras reproducibles |
+| tests.js | Suite de 52 pruebas financieras reproducibles |
 | tests.html / tests-browser.js | Ejecución de la suite en navegador |
 | verification.json | Resultados de pruebas ejecutadas y ejemplos calculados |
 | README.md | Arquitectura, fórmulas, despliegue y guion de exposición |
@@ -38,16 +38,12 @@ El prototipo es monousuario y guarda una sola raíz JSON bajo `horizonte-v1`. No
 
 | Entidad lógica / almacenamiento | Campos principales | Reglas y significado |
 |---|---|---|
-| Estado | version, accounts, transactions, fire, compound, answers, reviewStarted, lastDecision | Versión interna 2; raíz monousuario conservada bajo `horizonte-v1` |
+| Estado | version, accounts, transactions, fire, compound, investmentGuide | Versión interna 2; raíz monousuario conservada bajo `horizonte-v1` |
 | Cuenta o saldo / accounts[] | id, name, kind, balance, asOf | UUID, nombre, tipo práctico, saldo >= 0, fecha de valoración |
 | Movimiento / transactions[] | id, date, kind, name, category, amount | Importe positivo; ingreso, gasto o transferencia |
 | Configuración FIRE / fire | age, retirementAge, initial, contribution, spending, withdrawal, inflation, cautious, base, optimistic | Edad entera, gasto y retirada > 0; tasas en porcentaje en la interfaz |
 | Configuración compuesto / compound | initial, contribution, years, nominal, inflation, purchase | Capital y aportación >= 0; plazo entero 1-80 |
-| Pregunta / QUESTIONS | group, text, reverse | Nueve definiciones inmutables en finance.js; índice como referencia local |
-| Respuesta / answers[] | Nueve enteros 1-5 | Último test completo; índice corresponde a QUESTIONS |
-| Reglas conductuales | Umbrales 35 y 65, 48 horas, 10% | Constantes didácticas en el código; no calibradas psicométricamente |
-| Revisión / reviewStarted | Fecha-hora numérica | Inicio del periodo de reflexión; independiente de una orden real |
-| Última comprobación / lastDecision | at, portfolio, position, counter, risk, concentration, blocked | Se conserva solo la última, no un historial auditable |
+| Orientación / investmentGuide | horizon, liquidity, lossTolerance, experience, goal, emergencyFund, highInterestDebt | Últimas respuestas locales; valores validados. Perfiles anteriores dejan los dos nuevos datos como desconocidos |
 
 ### Semántica contable y límites
 
@@ -58,7 +54,7 @@ El prototipo es monousuario y guarda una sola raíz JSON bajo `horizonte-v1`. No
 - **Transferencias internas excluidas.** Mover dinero a una cuenta o inversión propia no es gasto ni ingreso. El ahorro es capacidad previa a su distribución entre cuentas o inversiones.
 - **Capital FIRE no es patrimonio neto.** El botón de vinculación toma únicamente los activos de inversión, no vivienda ni liquidez. El usuario ajusta el capital realmente disponible y contempla sus deudas y obligaciones en el gasto objetivo.
 - **Moneda elegida.** La bienvenida permite seleccionar 15 monedas. No se convierten divisas: la elección solo cambia el formato visual y todos los importes deben pertenecer a la misma moneda. Los resultados se calculan sin redondeos intermedios y se muestran con dos decimales. No se utiliza el prototipo como motor de liquidación monetaria.
-- **Fechas locales.** Las fechas de movimientos usan YYYY-MM-DD sin conversión UTC; el periodo mensual es YYYY-MM. La espera conductual usa tiempo transcurrido desde una marca temporal.
+- **Fechas locales.** Las fechas de movimientos usan YYYY-MM-DD sin conversión UTC; el periodo mensual es YYYY-MM.
 
 ## 4. Fórmulas y supuestos
 
@@ -80,9 +76,9 @@ $$
 K^* = \frac{12G}{w}
 $$
 
-G es gasto mensual objetivo en euros actuales y w la tasa de retirada inicial decimal. Para 1.500 EUR/mes y 4%, el capital objetivo es 450.000 EUR. La tasa de retirada es independiente de la rentabilidad del mercado.
+G es gasto mensual objetivo en euros actuales y w el porcentaje anual del capital que se retiraría durante el primer año, expresado como decimal. Para 1.500 EUR/mes y 4%, el capital objetivo es 450.000 EUR. Este porcentaje sirve para estimar el capital necesario; no es la rentabilidad de la cartera ni un pago garantizado.
 
-La regla del 4% es una referencia histórica: un retiro inicial del 4% del capital y posteriores importes ajustados a la inflación. No significa retirar siempre el 4% del saldo de cada año. El estudio histórico original analizó carteras estadounidenses y una longevidad mínima de 30 años; no garantiza resultados en otro mercado, fiscalidad ni horizonte FIRE prolongado. [Bengen](https://www.financialplanningassociation.org/sites/default/files/2020-05/7%20Determining%20Withdrawal%20Rates%20Using%20Historical%20Data.pdf)
+La regla del 4% es una referencia histórica de planificación: retirar un 4% del capital inicial durante el primer año y ajustar las cantidades posteriores por inflación. No significa retirar siempre el 4% del saldo de cada año. El estudio histórico original analizó carteras estadounidenses y una longevidad mínima de 30 años; no garantiza resultados en otro mercado, fiscalidad ni horizonte FIRE prolongado. [Bengen](https://www.financialplanningassociation.org/sites/default/files/2020-05/7%20Determining%20Withdrawal%20Rates%20Using%20Historical%20Data.pdf)
 
 ### 4.3 Tasas reales y mensuales
 
@@ -108,7 +104,7 @@ $$
 
 FIRE trabaja enteramente en euros de hoy, con aportación real C constante al final del mes. Para sostenerla, su importe nominal debe crecer con inflación. El algoritmo busca el primer cruce mes a mes hasta 960 meses. Si el objetivo ya está cubierto, devuelve cero meses; si no se alcanza, devuelve null, mostrado como no alcanzado en 80 años. No utiliza logaritmos con dominio inválido para casos imposibles.
 
-Los tres escenarios solo cambian rentabilidad nominal; la inflación es común y editable, por lo que se puede repetir el análisis con otros supuestos inflacionarios. Son sensibilidades deterministas, no intervalos de confianza. La edad de jubilación de referencia compara el capital acumulado con el objetivo. No se calcula pensión pública ni edad legal. La proyección continúa aportando después del primer cruce para comparación; no simula retiros.
+Los tres escenarios solo cambian rentabilidad nominal; la inflación es común y editable, por lo que se puede repetir el análisis con otros supuestos inflacionarios. Son sensibilidades deterministas, no intervalos de confianza. La edad de jubilación de referencia compara el capital acumulado con el objetivo. No se calcula pensión pública ni edad legal. La gráfica muestra edades desde la edad actual hasta un máximo de 90, con puntos mensuales, marcas de capital cada 100.000 y cada curva termina en su primer cruce del objetivo (o a los 90 si no lo alcanza); así se evita alargar la escala con capital acumulado innecesario tras alcanzar FIRE. La tabla mantiene la proyección anual completa de hasta 80 años. No simula retiros.
 
 ### 4.5 Interés compuesto
 
@@ -146,31 +142,17 @@ $$
 
 La interfaz distingue capital futuro no acumulado, ganancia no obtenida y valor en euros actuales. La compra es un escenario independiente, sin aportaciones, que no se añade a la cartera del otro simulador. No se mide el bienestar del consumo, depreciación ni valor residual. Rentabilidad negativa puede producir una ganancia no obtenida negativa: invertir no es necesariamente mejor.
 
-## 5. Economía conductual y reglas automáticas
+## 5. Orientación educativa sobre inversiones
 
-Nueve escenarios cotidianos, tres por sesgo. La tercera escena de cada grupo está invertida para reducir respuestas mecánicas, sin que eso valide el instrumento. Se responde por frecuencia de conducta (1 = nunca, 5 = casi siempre), no por acuerdo con una afirmación. Para un ítem invertido, la puntuación corregida es 6 menos respuesta. Para cada grupo:
+«Mis decisiones» pregunta por horizonte, liquidez, tolerancia declarada a pérdidas, experiencia, objetivo, fondo de emergencia y deudas de interés alto. Si el usuario informa que no tiene reserva o que mantiene deuda cara, lo destaca como prioridad antes de invertir; a partir de reglas explícitas también presenta categorías que recomienda investigar y otras para comparar. No comprueba importes ni analiza ingresos, condiciones contractuales, fiscalidad, jurisdicción, necesidades completas o idoneidad; no es asesoramiento financiero ni perfil MiFID y no propone productos concretos, brokers particulares ni órdenes.
 
-$$
-S_b=25\left(\frac{\sum_{j=1}^{3}x'_j}{3}-1\right)
-$$
+La orientación distingue cuentas remuneradas y depósitos, letras/deuda pública, fondos monetarios, bonos individuales, fondos de renta fija, fondos mixtos, fondos indexados/ETF globales, acciones individuales, productos de pensiones, inmobiliario cotizado, materias primas, criptoactivos y forex/CFD/trading. Explica que el broker es un intermediario y no un activo. La lista no es exhaustiva y la disponibilidad, protección, fiscalidad y regulación varían por país y producto.
 
-| Puntuación | Señal | Interpretación didáctica |
-|---|---|---|
-| Menos de 35 | Baja | Poca identificación con estas afirmaciones; no ausencia demostrada de sesgo |
-| De 35 a menos de 65 | Moderada | Introducir revisión deliberada |
-| Desde 65 | Alta | Activar fricciones adicionales |
+Como regla educativa, un horizonte corto, una necesidad alta de liquidez o no poder asumir pérdidas prioriza investigar depósitos y deuda pública de corto plazo; los fondos monetarios se muestran para comparar con la advertencia de que no son depósitos ni garantizan capital. En horizontes intermedios se hace énfasis en vencimientos, renta fija y riesgo de venta anticipada. En horizontes largos, si se declara capacidad de soportar fluctuaciones, se incluyen fondos diversificados; acciones individuales solo aparecen como comparación con experiencia declarada. Forex apalancado, trading frecuente y cripto se muestran en un bloque explícito de alto riesgo, no como base para alcanzar objetivos. Estas reglas ordenan temas para investigar; no predicen retornos.
 
-No se crea un perfil único de riesgo ni se recomienda un producto. Se presentan tres dimensiones independientes y recomendaciones concretas. La neutralidad en todas las preguntas produce 50/100, no cero.
+La app conserva en local las respuestas para recuperar la orientación; no consulta precios, proveedores, rentabilidades actuales ni servicios externos. Antes de contratar, se deben revisar documentación, riesgos, costes, liquidez, impuestos y autorización del proveedor en la jurisdicción correspondiente. Ninguna categoría de inversión de mercado ofrece rentabilidad garantizada.
 
-El laboratorio actúa sobre la **comprobación del plan**, no sobre operaciones reales:
-
-- Aversión a la pérdida alta: no completa la comprobación hasta pasar 48 horas desde el inicio de revisión. La app no decide por sí sola si vender o mantener.
-- Confirmación moderada o alta: requiere un argumento contrario de al menos 40 caracteres y una condición de invalidación. La longitud solo comprueba presencia; la calidad exige evaluación humana.
-- Exceso de confianza alto: la posición declarada tras la decisión debe ser como máximo el 10% del patrimonio invertido total declarado tras la decisión. Este límite es un ejercicio, no una regla universal de inversión.
-- Para cualquier perfil: se declara haber documentado riesgo de pérdida. El total debe ser positivo y la posición no puede superarlo.
-- Si cambia el test, se desactiva su evaluación hasta reenviarlo. Si cambia el plan, se invalida la última comprobación. El reloj se consulta al comprobar, no mediante vigilancia en segundo plano.
-
-Una espera local se puede eludir manipulando el reloj o localStorage y no se vincula a una orden concreta. No es un control antifraude ni de cumplimiento normativo. La última comprobación se exporta, pero el formulario no se restaura automáticamente desde ella al recargar.
+El resultado incluye literalmente una recomendación educativa sobre categorías a investigar y separa opciones principales, alternativas y productos de alto riesgo. La prioridad de fondo de emergencia y deuda cara solo usa las respuestas declaradas; no verifica saldos o tipos. La orientación no calcula una tasa de rentabilidad que debas introducir en FIRE: usa datos contractuales de productos concretos cuando existan y escenarios inciertos como hipótesis, nunca como garantía.
 
 ## 6. Diseño UX/UI
 
@@ -181,9 +163,9 @@ La aplicación usa una cabecera de marca académica, una barra de datos locales 
 | Mi balance | Periodo -> 8 tarjetas -> saldos/movimientos -> gráfico | Registrar o editar y comprobar capacidad de ahorro |
 | FIRE y jubilación | FIRE: supuestos -> objetivo -> escenarios; jubilación: pensión -> capital necesario -> desacumulación | Comparar independencia financiera con una jubilación que incorpora ingresos y gastos |
 | El valor del tiempo | Parámetros -> aportado/rendimientos -> oportunidad -> series | Comparar importes nominales y poder adquisitivo |
-| Mis decisiones | Aviso -> test -> tres señales -> laboratorio | Convertir autorreflexión en fricciones concretas |
+| Mis decisiones | Plazo/liquidez/riesgo -> categorías recomendadas -> catálogo de alternativas y advertencias | Decidir qué tipos de activos investigar, sin elegir un producto por el usuario |
 
-Flujo recomendado: cargar ejemplo o introducir saldos -> registrar movimientos -> traer inversión y flujo a FIRE -> revisar si el mes es representativo -> recalcular -> explorar coste de oportunidad -> completar test -> comprobar una decisión ficticia.
+Flujo recomendado: cargar ejemplo o introducir saldos -> registrar movimientos -> traer inversión y flujo a FIRE -> revisar si el mes es representativo -> recalcular -> explorar coste de oportunidad -> indicar horizonte, liquidez y tolerancia a pérdidas -> revisar opciones y riesgos antes de comparar ofertas reales.
 
 Accesibilidad: etiquetas visibles, controles HTML nativos, foco visible, enlace para saltar al contenido, mensajes con aria-live, navegación etiquetada, textos además de colores, tablas alternativas para los gráficos. El estado vacío invita a añadir datos o cargar el ejemplo. Los errores conservan el formulario. Al editar supuestos, un aviso aclara que los resultados visibles pertenecen al último cálculo hasta pulsar el botón.
 
@@ -203,7 +185,7 @@ Accesibilidad: etiquetas visibles, controles HTML nativos, foco visible, enlace 
 3. En Settings -> Pages -> Build and deployment elegir Deploy from a branch.
 4. Seleccionar la rama main y la carpeta /(root), y guardar.
 5. Cuando GitHub muestre la dirección publicada, abrirla y comprobar index.html y tests.html. No se proporciona una URL ficticia ni se ha publicado por el usuario.
-6. Revisar a 360 px y en escritorio, comprobar los nueve módulos y el guardado tras recargar.
+6. Revisar a 360 px y en escritorio, comprobar los seis módulos personales y el guardado tras recargar.
 
 GitHub permite publicar desde una rama y su carpeta raíz o /docs. [GitHub Docs](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site)
 
@@ -217,9 +199,9 @@ Para evolucionar a un producto real: evaluación de privacidad y protección de 
 
 ## 8. Verificación y límites de pruebas
 
-Se ejecutaron **49 pruebas del núcleo y módulos ampliados**, todas correctas. verification.json contiene los resultados. Se comprueban Fisher exacto, tasas cero y negativas, equivalencia mensual/anual, primer cruce FIRE, objetivo ya alcanzado, objetivo no alcanzado, retirada cero rechazada, fechas de jubilación incoherentes, independencia de coste de oportunidad, exclusión de transferencias, filtros mensuales, categorías equivalentes sin sensibilidad a mayúsculas, tildes o puntos finales, rechazo de categorías vacías tras normalizar, interpretación favorable del gasto por debajo del plan, ratios indefinidos, puntuaciones invertidas, presupuestos, jubilación con pensión y conversión nominal-real, préstamo francés y TAE finita, ratios bancarios y scoring explicable.
+Se ejecutan **52 pruebas del núcleo y módulos personales**, todas correctas. verification.json contiene los resultados. Se comprueban Fisher exacto, tasas cero y negativas, equivalencia mensual/anual, primer cruce FIRE con resolución mensual, objetivo ya alcanzado, objetivo no alcanzado, retirada cero rechazada, fechas de jubilación incoherentes, independencia de coste de oportunidad, exclusión de transferencias, filtros mensuales, categorías equivalentes sin sensibilidad a mayúsculas, tildes o puntos finales, validación de orientación, prioridades del fondo de emergencia y deuda cara, desconocidos conservados y distinción entre broker y activo, interpretación favorable del gasto por debajo del plan, ratios indefinidos, presupuestos, jubilación con pensión y conversión nominal-real, y préstamo francés y TAE finita.
 
-Además de la suite de dominio, se hizo una comprobación funcional en navegador: navegación por los nueve módulos, envío de los formularios de cálculo, juego de decisiones, persistencia tras recargar y ausencia de `NaN`/`Infinity`. Esta comprobación no certifica todos los navegadores ni sustituye pruebas de extremo a extremo.
+Además de la suite de dominio, se hizo una comprobación funcional en navegador: navegación por los seis módulos personales, envío de los formularios de cálculo y de la orientación de inversión, persistencia tras recargar y ausencia de `NaN`/`Infinity`. Esta comprobación no certifica todos los navegadores ni sustituye pruebas de extremo a extremo.
 
 ### Checklist manual antes de clase
 
@@ -230,9 +212,9 @@ Además de la suite de dominio, se hizo una comprobación funcional en navegador
 5. Pulsar Traer inversión y flujo: la aportación pasa a 1.000 EUR, pero los resultados no cambian hasta recalcular. No confundir este caso con la referencia de 500 EUR.
 6. Probar cero retorno, rentabilidad negativa y cero aportación. No debe aparecer NaN ni infinito en casos admitidos. Un gasto FIRE de cero debe rechazarse.
 7. En compuesto, 10.000 EUR iniciales, 200 EUR/mes, 5%, 2% inflación, 20 años: contrastar los totales de demostración.
-8. Para perfil alto en todos los sesgos, contestar 5,5,1 en cada grupo. Comprobar puntuación 100, bloqueo por espera, argumento corto y concentración superior al 10%. Para una comprobación sin fricciones específicas, usar 1,1,5 en cada grupo y marcar la revisión de riesgos.
+8. En Mis decisiones, probar horizonte corto y sin tolerancia a pérdidas: debe priorizar depósitos y letras, no fondos de renta variable. Marca que no tienes reserva y que tienes deuda cara: ambas prioridades deben aparecer antes de las categorías. Con plazo largo y tolerancia a grandes caídas, revisar las alternativas de fondos globales y las advertencias sobre trading, forex y cripto.
 9. Exportar JSON y comprobar su contenido. Borrar los datos del navegador al terminar la demostración en un equipo compartido.
-10. Navegar con teclado, móvil y zoom; comprobar las tablas alternativas si los gráficos no cargan. Abrir tests.html y comprobar las 49 pruebas.
+10. Navegar con teclado, móvil y zoom; comprobar las tablas alternativas si los gráficos no cargan. Abrir tests.html y comprobar las 52 pruebas.
 
 ## 9. Guion para exponer en clase
 
@@ -244,7 +226,7 @@ Duración orientativa: 7 minutos.
 | 0:45-2:00 | Balance, deuda y flujo mensual | Separación entre stock patrimonial y flujo; transferir no es gastar |
 | 2:00-3:30 | FIRE con parámetros iniciales, antes de vincular el flujo | Retirada no es rentabilidad; Fisher exacto; escenarios sin garantías |
 | 3:30-4:30 | Simulador compuesto y compra de 1.000 EUR | Aportaciones frente a rendimientos; euros nominales frente a reales |
-| 4:30-6:15 | Test y laboratorio con perfil alto | El diferenciador transforma sesgos en pausas y comprobaciones |
+| 4:30-6:15 | Orientación de inversiones y advertencias | Las respuestas ordenan categorías que investigar, no prometen resultados |
 | 6:15-7:00 | Pruebas, privacidad y límites | Un prototipo riguroso muestra también lo que no sabe |
 
 ### Cifras de contraste calculadas
@@ -269,16 +251,15 @@ Compuesto: 10.000 EUR iniciales + 200 EUR/mes nominales, 20 años, rentabilidad 
 | Ganancia nominal no obtenida por consumir esos 1.000 EUR | 1.653,30 EUR |
 | Valor futuro de la compra en euros actuales | 1.785,59 EUR |
 
-Cierre sugerido: "Horizonte no intenta adivinar el mercado. Ordena la situación de partida, hace explícitos los supuestos y añade disciplina antes de decidir. El valor del modelo está tanto en sus cálculos como en explicar sus límites."
+Cierre sugerido: "Horizonte no intenta adivinar el mercado ni elegir inversiones por ti. Ordena la situación de partida, propone categorías para investigar y hace explícitos los supuestos y límites de cada simulación."
 
 ## 10. Módulos financieros ampliados
 
-La versión 2 conserva la clave `horizonte-v1` para no perder instalaciones existentes y migra raíces con `version: 1` al nuevo esquema (añade `budgets`, `retirement`, `loan`, `bank` y `credit`). No se introducen dependencias de compilación ni servidor.
+La versión 2 conserva la clave `horizonte-v1` para no perder instalaciones existentes y migra raíces con `version: 1` al nuevo esquema (añade `budgets`, `retirement` y `loan`). Si hay preferencias antiguas de Banco o Crédito empresa, se descartan al cargar; el resto de datos personales se conserva. No se introducen dependencias de compilación ni servidor.
 
 * **Presupuesto mensual:** `Fin.monthlyBudgets({month, budgets, transactions})` agrupa gastos de caja por categoría, incluye categorías no presupuestadas y devuelve plan, real, desviación, saldo restante, ahorro y tasa de ahorro. La desviación es `plan - real`: positiva es ahorro favorable frente al plan y negativa es exceso desfavorable. `categoryBudgets` es un alias.
 * **FIRE y jubilación:** FIRE calcula el objetivo sin pensión; `Fin.retirementProjection` calcula acumulación en euros reales, pensión, gasto, capital requerido (`(gasto-pensión)*12/tasa`) y tres desacumulaciones educativas. El botón «Copiar supuestos FIRE» permite comparar ambas alternativas. No modela impuestos, prestaciones legales, longevidad ni riesgo de secuencia.
-* **Préstamo:** `Fin.loanAmortization` usa amortización francesa, separa principal/interés/comisión en cada cuota y estima la TAE mediante los flujos mensuales. Las comisiones opcionales son `upfrontFee`, `monthlyFee` y `otherFees`.
-* **Banco:** `Fin.bankRatios` devuelve CET1, Tier 1, Tier 2, capital total, apalancamiento (`Tier 1 / activos totales`), depósitos/activos, LCR y NSFR. Los umbrales se pueden proporcionar en `thresholds`; las alertas son pedagógicas y no una evaluación supervisora.
-* **Crédito empresarial:** `Fin.businessCreditScore` expone DSCR, márgenes, deuda/ingresos, liquidez, trayectoria, historial y sector mediante componentes ponderados con razones legibles. La banda mostrada no es un rating regulatorio ni una decisión automática y requiere revisión humana.
+* **Préstamo:** `Fin.loanAmortization` usa amortización francesa, separa principal/interés/comisión en cada cuota y estima la TAE mediante los flujos mensuales. Las comisiones opcionales son `upfrontFee`, `monthlyFee` y `otherFees`. El campo opcional «TAE indicada por el banco» guarda y muestra la cifra de la oferta para compararla con la estimada; no interviene en la cuota ni sustituye la documentación contractual.
+* **WikiEconomy:** define los conceptos visibles en los módulos actuales, incluida la desviación presupuestaria `plan - real`, las preguntas de preparación para invertir, las clases de activos incluidas en la guía y la diferencia entre TAE calculada y TAE publicada por el banco.
 
-Todos los cálculos del dominio validan números finitos, rangos, denominadores y textos antes de operar. Las nuevas pantallas son accesibles, muestran tablas además de cualquier gráfico y guardan solo los supuestos introducidos en localStorage sin cifrar. Ejecuta `node tests.js` (o `tests.html`) para validar los módulos base y ampliados.
+Todos los cálculos del dominio validan números finitos, rangos, denominadores y textos antes de operar. Las pantallas son accesibles, muestran tablas además de cualquier gráfico y guardan solo los supuestos introducidos en localStorage sin cifrar. Ejecuta `node tests.js` (o `tests.html`) para validar los módulos disponibles.
