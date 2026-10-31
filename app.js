@@ -73,6 +73,10 @@ function addBudgetRow(data={}) {
  row.innerHTML=`<label>Categoría<input name="budgetCategory" maxlength="60" placeholder="Vivienda, alimentación..." value="${escape(data.category||'')}"></label><label>Importe planificado (moneda elegida)<input name="budgetPlanned" type="number" min="0" max="1000000000" step="0.01" value="${data.planned ?? 0}"></label><button type="button" class="secondary danger remove-budget-row">Quitar</button>`;
  $('budget-rows').append(row);
 }
+function setBudgetRows(budgets) {
+ $('budget-rows').replaceChildren();
+ (budgets.length?budgets:[{}]).forEach(addBudgetRow);
+}
 function renderRetirement(result) {
  const rows=result.scenarios.map(s=>[s.name,pct(s.annualReturn),money(s.endingCapital),s.depleted?'Capital agotado':'Capital restante']);
  const fireTarget=state.fire?state.fire.spending*12/(state.fire.withdrawal/100):null;
@@ -131,7 +135,7 @@ $('investment-catalog').innerHTML=Fin.INVESTMENT_OPTIONS.map(option=>`<article c
 $('month').value=localDate().slice(0,7);resetAccount();resetTransaction();
 fill($('fire-form'),state.fire);fill($('compound-form'),state.compound);
 const advancedMonth=localDate().slice(0,7);$('budget-form').elements.namedItem('month').value=advancedMonth;
-if(state.budgets.length)state.budgets.forEach(addBudgetRow);else addBudgetRow();
+setBudgetRows(state.budgets);
 if(state.retirement){const retirementFormData=Object.assign({},state.retirement,{nominalReturn:state.retirement.nominalReturn*100,inflation:state.retirement.inflation*100,withdrawalRate:state.retirement.withdrawalRate*100});fill($('retirement-form'),retirementFormData);}
 if(state.loan)fill($('loan-form'),Object.assign({},state.loan,{annualNominalRate:state.loan.annualNominalRate*100,officialTae:state.loan.officialTae===null||state.loan.officialTae===undefined?'':state.loan.officialTae*100}));
 if(state.investmentGuide)fill($('investment-guide-form'),state.investmentGuide);
@@ -195,8 +199,11 @@ runAdvancedForm('loan-form', form=>{
 $('export').onclick=()=>{const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='horizonte-datos.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);say('Exportación generada. Contiene datos financieros y respuestas sin cifrar; guárdala de forma privada.');};
 $('demo').onclick=()=>{
  if(!confirm('El ejemplo sustituirá los datos actuales de la aplicación. ¿Continuar?'))return;
- const date=localDate();state=blank();state.accounts=[{id:uuid(),name:'Fondo de emergencia',kind:'liquid',balance:5000,asOf:date},{id:uuid(),name:'Cartera diversificada ficticia',kind:'investment',balance:30000,asOf:date},{id:uuid(),name:'Participación en vivienda',kind:'other',balance:100000,asOf:date},{id:uuid(),name:'Préstamo pendiente',kind:'liability',balance:20000,asOf:date}];state.transactions=[['income','Nómina','Trabajo',2500],['expense','Vivienda y suministros','Vivienda',1000],['expense','Supermercado','Alimentación',300],['expense','Ocio','Ocio',200],['transfer','Aportación a inversión','Inversión',500]].map(([kind,name,category,amount])=>({id:uuid(),date,kind,name,category,amount}));
- $('month').value=date.slice(0,7);$('fire-form').reset();$('compound-form').reset();$('investment-guide-form').reset();$('investment-guide-results').innerHTML='';resetAccount();resetTransaction();state.investmentGuide=null;state.fire=calculateFire(numericForm($('fire-form')));state.compound=calculateCompound(numericForm($('compound-form')));save();renderDashboard();say('Ejemplo ficticio cargado. FIRE comienza con supuestos ilustrativos: usa Traer inversión y flujo para vincularlo al mes.');
+ const date=localDate(),month=date.slice(0,7);state=blank();state.accounts=[{id:uuid(),name:'Fondo de emergencia',kind:'liquid',balance:5000,asOf:date},{id:uuid(),name:'Cartera diversificada ficticia',kind:'investment',balance:30000,asOf:date},{id:uuid(),name:'Participación en vivienda',kind:'other',balance:100000,asOf:date},{id:uuid(),name:'Préstamo pendiente',kind:'liability',balance:20000,asOf:date}];state.transactions=[['income','Nómina','Trabajo',2500],['expense','Vivienda y suministros','Vivienda',1000],['expense','Supermercado','Alimentación',300],['expense','Ocio','Ocio',200],['transfer','Aportación a inversión','Inversión',500]].map(([kind,name,category,amount])=>({id:uuid(),date,kind,name,category,amount}));
+ state.budgets=[{category:'Vivienda',planned:900},{category:'Alimentación',planned:350},{category:'Ocio',planned:200}];
+ $('budget-form').elements.namedItem('month').value=month;setBudgetRows(state.budgets);
+ renderBudgets(Fin.monthlyBudgets({month,budgets:state.budgets,transactions:state.transactions}));
+ $('month').value=month;$('fire-form').reset();$('compound-form').reset();$('investment-guide-form').reset();$('investment-guide-results').innerHTML='';resetAccount();resetTransaction();state.investmentGuide=null;state.fire=calculateFire(numericForm($('fire-form')));state.compound=calculateCompound(numericForm($('compound-form')));save();renderDashboard();say('Ejemplo ficticio cargado. El presupuesto usa las mismas categorías y el mismo mes que los gastos; FIRE comienza con supuestos ilustrativos: usa Traer inversión y flujo para vincularlo al mes.');
 };
 $('clear').onclick=()=>{if(confirm('¿Borrar todos los datos de Horizonte de este navegador? No se borran archivos exportados.')){try{localStorage.removeItem(KEY);localStorage.removeItem(PROFILE_KEY);location.reload();}catch(e){say('No se pudo borrar el almacenamiento. Usa los ajustes de datos del sitio en tu navegador.');}}};
 renderDashboard();
